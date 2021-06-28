@@ -7863,6 +7863,38 @@ _put_Canon_CaptureMode(CONFIG_PUT_ARGS) {
 }
 
 static int
+_get_Canon_AFMethod(CONFIG_GET_ARGS) {
+	float value_float;
+	PTPParams		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_RANGE, _(menu->label), widget);
+	gp_widget_set_name (*widget,menu->name);
+	gp_widget_set_range (*widget, 0, 0xFFFFFFFF, 1);
+	value_float = (float)dpd->CurrentValue.u32;
+	gp_widget_set_value  (*widget, &value_float);
+
+	return GP_OK;
+}
+
+static int
+_put_Canon_AFMethod(CONFIG_PUT_ARGS) {
+	float value;
+	PTPParams		*params = &(camera->pl->params);
+
+	if (!have_eos_prop(params, PTP_VENDOR_CANON, PTP_DPC_CANON_EOS_LvAfSystem) ) {
+		GP_LOG_D ("No LvAfSystem property?");
+		return GP_OK;
+	}
+
+	CR (gp_widget_get_value(widget, &value));
+
+	// Default to FlexZone Single
+	propval->u32 = (uint32_t)value;
+
+	return GP_OK;
+}
+
+static int
 _get_Canon_RemoteMode(CONFIG_GET_ARGS) {
 	char		buf[200];
 	PTPParams	*params = &(camera->pl->params);
@@ -10111,6 +10143,7 @@ static struct submenu camera_settings_menu[] = {
 	{ N_("Capture Target"),		"capturetarget",PTP_DPC_SONY_StillImageStoreDestination,  PTP_VENDOR_SONY,0, _get_Sony_CaptureTarget,     _put_Sony_CaptureTarget },
 	{ N_("CHDK"),     		"chdk",		PTP_OC_CHDK,  PTP_VENDOR_CANON,   0,  _get_CHDK,     _put_CHDK },
 	{ N_("Capture"),		"capture",	0,  PTP_VENDOR_CANON,   0,  _get_Canon_CaptureMode, _put_Canon_CaptureMode },
+	{ N_("AF Method"),						  "afmethod", PTP_DPC_CANON_EOS_LvAfSystem,  PTP_VENDOR_CANON,   PTP_DTC_UINT32,  _get_Canon_AFMethod,     _put_Canon_AFMethod },
 	{ N_("Remote Mode"),		"remotemode",	PTP_OC_CANON_EOS_SetRemoteMode,  PTP_VENDOR_CANON,   0,  _get_Canon_RemoteMode, _put_Canon_RemoteMode },
 	{ N_("Event Mode"),		"eventmode",	PTP_OC_CANON_EOS_SetEventMode,   PTP_VENDOR_CANON,   0,  _get_Canon_EventMode,  _put_Canon_EventMode },
 	{ 0,0,0,0,0,0,0 },
