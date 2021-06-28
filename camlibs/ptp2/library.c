@@ -5983,7 +5983,7 @@ camera_trigger_canon_eos_capture (Camera *camera, GPContext *context)
 	if (ptp_operation_issupported(params, PTP_OC_CANON_EOS_RemoteReleaseOn)) {
 		if (!is_canon_eos_m (params)) {
 			/* Regular EOS */
-			int 			manualfocus = 0, foundfocusinfo = 0;
+			int 			manualfocus = 1, foundfocusinfo = 0;
 
 			/* are we in manual focus mode ... value would be 3 */
 			if (PTP_RC_OK == ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_FocusMode, &dpd)) {
