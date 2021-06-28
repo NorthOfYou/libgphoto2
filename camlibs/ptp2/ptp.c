@@ -4023,7 +4023,7 @@ ptp_canon_eos_setdevicepropvalue (PTPParams* params,
 
 	ret = ptp_transaction(params, &ptp, PTP_DP_SENDDATA, size, &data, NULL);
 	free (data);
-	if (ret == PTP_RC_OK) {
+	if (ret == PTP_RC_OK || ret == PTP_RC_DeviceBusy) {
 		/* commit to cache only after successful setting */
 		switch (propcode) {
 		case PTP_DPC_CANON_EOS_ImageFormat:
