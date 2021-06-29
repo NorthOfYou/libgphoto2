@@ -2712,14 +2712,17 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			if (mask & 0x0100) {
 				/* mask 0x0100: 6 bytes, 00 00 00 00 00 00 (before focus) and 00 00 00 00 01 00 (on focus) observed */
 				ce[i].type = PTP_CANON_EOS_CHANGES_TYPE_FOCUSINFO;
-				ce[i].u.info = malloc(strlen("0123456789ab")+1);
-				sprintf(ce[i].u.info,"%02x%02x%02x%02x%02x%02x",
+				ce[i].u.info = malloc(strlen("0123456789abcde")+1);
+				sprintf(ce[i].u.info,"%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 					curdata[curoff],
 					curdata[curoff+1],
 					curdata[curoff+2],
 					curdata[curoff+3],
 					curdata[curoff+4],
-					curdata[curoff+5]
+					curdata[curoff+5],
+					curdata[curoff+6],
+					curdata[curoff+7],
+					curdata[curoff+8]
 				);
 				if (olcver >= 0x12)
 					curoff += 7;
