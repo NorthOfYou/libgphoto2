@@ -6215,7 +6215,8 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 		} while (tries--);
 
 		/* busyness will be reported during the whole of the exposure time. */
-		C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
+		/* Disabled by & Ryan */
+		// C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
 		return GP_OK;
 	}
 
