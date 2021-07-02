@@ -5691,12 +5691,14 @@ camera_capture (Camera *camera, CameraCaptureType type, CameraFilePath *path,
 	) {
 		char buf[1024];
 		int sdram = 0;
-		int af = 1;
+		int af = 0;
 
 		if ((GP_OK != gp_setting_get("ptp2","capturetarget",buf)) || !strcmp(buf,"sdram"))
 			sdram = 1;
-		if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
-			af = 0;
+
+		/* Disabled by Ryan & Ben */
+		// if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
+		// 	af = 0;
 
 		return camera_nikon_capture (camera, type, path, af, sdram, context);
 	}
@@ -5708,10 +5710,11 @@ camera_capture (Camera *camera, CameraCaptureType type, CameraFilePath *path,
 	)) {
 		int ret = GP_ERROR_NOT_SUPPORTED;
 		char buf[1024];
-		int af = 1;
+		int af = 0;
 
-		if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
-			af = 0;
+		/* Disabled by Ryan & Ben */
+		// if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
+		// 	af = 0;
 		if ((GP_OK != gp_setting_get("ptp2","capturetarget",buf)) || !strcmp(buf,"sdram"))
 			ret = camera_nikon_capture (camera, type, path, af, 1, context);
 		if (ret != GP_ERROR_NOT_SUPPORTED)
@@ -6133,7 +6136,7 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 	uint16_t	ret;
 	char		buf[1024];
 	int		sdram = 0;
-	int		af = 1;
+	int		af = 0;
 
 	GP_LOG_D ("camera_trigger_capture");
 
@@ -6146,8 +6149,9 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 	if (!strcmp(buf,"sdram"))
 		sdram = 1;
 
-	if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
-		af = 0;
+	/* Disabled by Ryan & Ben */
+	// if ((GP_OK != gp_setting_get("ptp2","autofocus",buf)) || !strcmp(buf,"off"))
+	// 	af = 0;
 
 	GP_LOG_D ("Triggering capture to %s, autofocus=%d", buf, af);
 
