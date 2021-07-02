@@ -6158,47 +6158,62 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 		ptp_operation_issupported(params, PTP_OC_NIKON_InitiateCaptureRecInMedia)
 	) {
 		/* If in liveview mode, we have to run non-af capture */
-		int inliveview = 0;
-		int tries;
-		PTPPropertyValue propval;
+		/* Disabled by Ryan & Ben - we always disable autofocus, so this isn't needed */
+// 		int inliveview = 0;
+// 		int tries;
+// 		PTPPropertyValue propval;
+//
+// 		C_PTP_REP (ptp_check_event (params));
+// 		C_PTP_REP (nikon_wait_busy (params, 100, 2000)); /* lets wait 2 seconds */
+// 		C_PTP_REP (ptp_check_event (params));
+//
+// 		if (ptp_property_issupported (params, PTP_DPC_NIKON_LiveViewStatus)) {
+// 			ret = ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewStatus, &propval, PTP_DTC_UINT8);
+// 			if (ret == PTP_RC_OK)
+// 				inliveview = propval.u8;
+//
+// 			if (inliveview) af = 0;
+// 		}
 
-		C_PTP_REP (ptp_check_event (params));
-		C_PTP_REP (nikon_wait_busy (params, 100, 2000)); /* lets wait 2 seconds */
-		C_PTP_REP (ptp_check_event (params));
+		ret = ptp_nikon_capture2 (params, af, sdram);
+		if (ret == PTP_RC_OK)
+			return GP_OK;
 
-		if (ptp_property_issupported (params, PTP_DPC_NIKON_LiveViewStatus)) {
-			ret = ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewStatus, &propval, PTP_DTC_UINT8);
+		/* Nikon 1 ... if af is 0, it reports PTP_RC_NIKON_InvalidStatus */
+		if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
+			ret = ptp_nikon_capture2 (params, 1, sdram);
 			if (ret == PTP_RC_OK)
-				inliveview = propval.u8;
-
-			if (inliveview) af = 0;
+				return GP_OK;
 		}
 
-		tries = 200;
-		do {
-			ret = ptp_nikon_capture2 (params, af, sdram);
-			if (ret == PTP_RC_OK)
-				break;
+		return translate_ptp_result (ret);
 
-			/* Nikon 1 ... if af is 0, it reports PTP_RC_NIKON_InvalidStatus */
-			if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
-				ret = ptp_nikon_capture2 (params, 1, sdram);
-				if (ret == PTP_RC_OK)
-					break;
-			}
-
-			/* busy means wait and the invalid status might go away */
-			if ((ret != PTP_RC_DeviceBusy) && (ret != PTP_RC_NIKON_InvalidStatus) && (ret != 0xa207)) /* a207 on Nikon D850 */
-				return translate_ptp_result (ret);
-
-			usleep(2000);
-			/* sleep a bit perhaps ? or check events? */
-		} while (tries--);
-
-		/* busyness will be reported during the whole of the exposure time. */
-		/* Disabled by & Ryan */
-		// C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
-		return GP_OK;
+		/* Replaced with above code by Ryan & Ben - we handle errors ourselves, fixes a bug with busy timeout */
+// 		tries = 200;
+// 		do {
+// 			ret = ptp_nikon_capture2 (params, af, sdram);
+// 			if (ret == PTP_RC_OK)
+// 				break;
+//
+// 			/* Nikon 1 ... if af is 0, it reports PTP_RC_NIKON_InvalidStatus */
+// 			if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
+// 				ret = ptp_nikon_capture2 (params, 1, sdram);
+// 				if (ret == PTP_RC_OK)
+// 					break;
+// 			}
+//
+// 			/* busy means wait and the invalid status might go away */
+// 			if ((ret != PTP_RC_DeviceBusy) && (ret != PTP_RC_NIKON_InvalidStatus) && (ret != 0xa207)) /* a207 on Nikon D850 */
+// 				return translate_ptp_result (ret);
+//
+// 			usleep(2000);
+// 			/* sleep a bit perhaps ? or check events? */
+// 		} while (tries--);
+//
+// 		/* busyness will be reported during the whole of the exposure time. */
+// 		/* Disabled by & Ryan */
+// 		// C_PTP_REP (nikon_wait_busy (params, 100, 1000*1000)); /* lets wait 1000 seconds (D780 can do 900 second exposures) */
+// 		return GP_OK;
 	}
 
 	/* Nikon */
