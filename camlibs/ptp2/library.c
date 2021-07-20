@@ -3321,15 +3321,15 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 			memset (&dpd,0,sizeof(dpd));
 
 			/* do not set it everytime, it will cause delays */
-			ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFMode, &dpd);
-			if ((ret == PTP_RC_OK) && (dpd.CurrentValue.u16 != 1)) {
-				/* 0 means off, 1 means on */
-				val.u16 = 1;
-				ret = ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFMode, &val, PTP_DTC_UINT16);
-				/* in movie mode we get busy, but can proceed */
-				if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
-					C_PTP_MSG (ret, "setval of evf enable to 1 failed (curval is %d)!", dpd.CurrentValue.u16);
-			}
+			// ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFMode, &dpd);
+			// if ((ret == PTP_RC_OK) && (dpd.CurrentValue.u16 != 1)) {
+			// 	/* 0 means off, 1 means on */
+			// 	val.u16 = 1;
+			// 	ret = ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFMode, &val, PTP_DTC_UINT16);
+			// 	/* in movie mode we get busy, but can proceed */
+			// 	if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
+			// 		C_PTP_MSG (ret, "setval of evf enable to 1 failed (curval is %d)!", dpd.CurrentValue.u16);
+			// }
 			ptp_free_devicepropdesc (&dpd);
 			/* do not set it everytime, it will cause delays */
 			ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &dpd);
@@ -3385,6 +3385,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 					/* JPEG blob */
 					/* stuff */
 					GP_LOG_D ("get_viewfinder_image header: len=%d type=%d", len, type);
+					// printf("live view type: %d", type);
 					switch (type) {
 					default:
 						if (len > (size-(xdata-data))) {
@@ -3392,6 +3393,14 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 							GP_LOG_E ("len=%d larger than rest size %ld", len, (size-(xdata-data)));
 						}
 						GP_LOG_DATA ((char*)xdata, len, "get_viewfinder_image header:");
+						// Added by Ryan and Ben, will log out the bytes of
+						// the header entries
+						// printf("live view part: %u, type: %d, content: ", len, type);
+						// for (int i=0; i < len; i++) {
+						// 		printf("%02hhx ", *((unsigned char*)(xdata+i)));
+						// }
+						// printf("\n");
+
 						xdata = xdata+len;
 						continue;
 					case 9:
@@ -3421,8 +3430,33 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 								GP_LOG_E ("len=%d larger than rest size %ld", len, (size-(xdata-data)));
 								break;
 							}
+
+							// pull the eoszoompos out
+							if (type == 13) {
+								int32_t eos_x = dtoh32a(xdata+8);
+								int32_t eos_y = dtoh32a(xdata+12);
+								int32_t rect_w = dtoh32a(xdata+16);
+								int32_t rect_h = dtoh32a(xdata+20);
+
+								size_t needed = snprintf(NULL, 0, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h) + 1;
+								char  *buffer = malloc(needed);
+								sprintf(buffer, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h);
+								buffer[needed] = 0;
+								gp_file_set_name (file, buffer);
+								free (buffer);
+								// printf("eos zoom pos: %d, %d", eos_x, eos_y);
+							}
+
 							GP_LOG_D ("get_viewfinder_image header: len=%d type=%d", len, type);
 							GP_LOG_DATA ((char*)xdata, len, "get_viewfinder_image header:");
+
+							// Added by Ryan and Ben, will log out the bytes of
+							// the header entries
+							// printf("live view part: %u, type: %d, content: ", len, type);
+							// for (int i=0; i < len; i++) {
+							// 		printf("%02hhx ", *((unsigned char*)(xdata+i)));
+							// }
+							// printf("\n");
 							xdata = xdata+len;
 						}
 						free (data);
