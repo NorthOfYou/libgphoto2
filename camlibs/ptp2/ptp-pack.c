@@ -2792,8 +2792,21 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			}
 			/* handle more masks */
 			ce[i].type = PTP_CANON_EOS_CHANGES_TYPE_UNKNOWN;
-			ce[i].u.info = malloc(strlen("OLCInfo event mask 0123456789")+1);
-			sprintf(ce[i].u.info, "OLCInfo event mask=%x",  mask);
+			ce[i].u.info = malloc(strlen("OLCInfo event mask=0123456789 content 0123456789abcdefghij")+1);
+			sprintf(ce[i].u.info,"OLCInfo event mask=%x content %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				mask,
+				curdata[curoff],
+				curdata[curoff+1],
+				curdata[curoff+2],
+				curdata[curoff+3],
+				curdata[curoff+4],
+				curdata[curoff+5],
+				curdata[curoff+6],
+				curdata[curoff+7],
+				curdata[curoff+8],
+				curdata[curoff+9]
+			);
+
 			break;
 		}
 		case PTP_EC_CANON_EOS_CameraStatusChanged:
