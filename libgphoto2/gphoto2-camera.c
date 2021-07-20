@@ -1388,7 +1388,7 @@ gp_camera_trigger_capture (Camera *camera, GPContext *context)
 int
 gp_camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 {
-	char *xname;
+	// char *xname;
 	C_PARAMS (camera && file);
 	CHECK_INIT (camera, context);
 
@@ -1403,10 +1403,10 @@ gp_camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 	CHECK_RESULT_OPEN_CLOSE (camera, camera->functions->capture_preview (
 					camera, file, context), context);
-	gp_file_get_name_by_type (file, "capture_preview", GP_FILE_TYPE_NORMAL, &xname);
+	// gp_file_get_name_by_type (file, "capture_preview", GP_FILE_TYPE_NORMAL, &xname);
 	/* FIXME: Marcus ... will go away, just keep compatible now. */
-	gp_file_set_name (file, xname);
-	free (xname);
+	// gp_file_set_name (file, xname);
+	// free (xname);
 
 	CAMERA_UNUSED (camera, context);
 	return (GP_OK);
