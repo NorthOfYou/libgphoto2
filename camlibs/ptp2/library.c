@@ -3316,7 +3316,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 			/* FIXME: this might cause a focusing pass and take seconds. 20 was not
 			 * enough (would be 0.2 seconds, too short for the mirror up operation.). */
 			/* The EOS 100D takes 1.2 seconds */
-			PTPDevicePropDesc       dpd;
+			// PTPDevicePropDesc       dpd;
 			int			try = 0;
 			struct timeval		event_start;
 
@@ -3324,7 +3324,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 			if (!params->eos_captureenabled)
 				camera_prepare_capture (camera, context);
-			memset (&dpd,0,sizeof(dpd));
+			// memset (&dpd,0,sizeof(dpd));
 
 			/* do not set it everytime, it will cause delays */
 			// ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFMode, &dpd);
@@ -3336,18 +3336,18 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 			// 	if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
 			// 		C_PTP_MSG (ret, "setval of evf enable to 1 failed (curval is %d)!", dpd.CurrentValue.u16);
 			// }
-			ptp_free_devicepropdesc (&dpd);
+			// ptp_free_devicepropdesc (&dpd);
 			/* do not set it everytime, it will cause delays */
-			ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &dpd);
+			// ret = ptp_canon_eos_getdevicepropdesc (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &dpd);
 			/* see config.c what kind of values we have ... it seems to be a mask. bit 0 is TFT, bit 1 PC, bit 2 MOBILE, bit 3 MOBILE2? */
 			/* so lets see it only if it does not have any bit set (discounted bit 0) */
-			if ((ret == PTP_RC_OK) && ((dpd.CurrentValue.u32 & ~1) == 0)) {
-				/* 2 means PC, 1 means TFT */
-				val.u32 = 2;
-				C_PTP_MSG (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &val, PTP_DTC_UINT32),
-					   "setval of evf outputmode to 2 failed (curval is %d)!", dpd.CurrentValue.u32);
-			}
-			ptp_free_devicepropdesc (&dpd);
+			// if ((ret == PTP_RC_OK) && ((dpd.CurrentValue.u32 & ~1) == 0)) {
+			// 	/* 2 means PC, 1 means TFT */
+			// 	val.u32 = 2;
+			// 	C_PTP_MSG (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &val, PTP_DTC_UINT32),
+			// 		   "setval of evf outputmode to 2 failed (curval is %d)!", dpd.CurrentValue.u32);
+			// }
+			// ptp_free_devicepropdesc (&dpd);
 
 			/* Otherwise the camera will auto-shutdown */
 			if (ptp_operation_issupported(params, PTP_OC_CANON_EOS_KeepDeviceOn)) C_PTP (ptp_canon_eos_keepdeviceon (params));
@@ -3362,10 +3362,11 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 				ret = ptp_canon_eos_get_viewfinder_image (params , &data, &size);
 				if ((ret == 0xa102) || (ret == PTP_RC_DeviceBusy)) { /* means "not there yet" ... so wait */
+					return translate_ptp_result (ret);
 					/* wait 3 seconds at most ... use a bit of backoff logic for cameras where we should not drain compute. */
-					usleep((++try)*5*1000);
-					if (time_since (event_start) < 3*1000)
-						continue;
+					// usleep((++try)*5*1000);
+					// if (time_since (event_start) < 3*1000)
+					// 	continue;
 /*
 					if (waiting_for_timeout (&back_off_wait, event_start, 3*1000))
 						continue;
