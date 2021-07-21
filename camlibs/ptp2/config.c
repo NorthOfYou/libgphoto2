@@ -2471,7 +2471,7 @@ static struct deviceproptableu16 canon_eos_aspectratio[] = {
 	{ "16:9",	0x0007, 0},
 	{ "1.6x",	0x000d, 0}, /* guess , EOS R */
 };
-GENERIC16TABLE(Canon_EOS_AspectRatio,canon_eos_aspectratio)
+GENERIC32TABLE(Canon_EOS_AspectRatio,canon_eos_aspectratio)
 
 /* actually in 1/10s of a second, but only 3 values in use */
 static struct deviceproptableu16 canon_selftimer[] = {
