@@ -2464,7 +2464,7 @@ static struct deviceproptableu8 sony_aspectratio[] = {
 GENERIC8TABLE(Sony_AspectRatio,sony_aspectratio)
 
 /* values are from 6D */
-static struct deviceproptableu16 canon_eos_aspectratio[] = {
+static struct deviceproptableu32 canon_eos_aspectratio[] = {
 	{ "3:2",	0x0000, 0},
 	{ "1:1",	0x0001, 0},
 	{ "4:3",	0x0002, 0},
