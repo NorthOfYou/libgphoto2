@@ -3362,6 +3362,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 				ret = ptp_canon_eos_get_viewfinder_image (params , &data, &size);
 				if ((ret == 0xa102) || (ret == PTP_RC_DeviceBusy)) { /* means "not there yet" ... so wait */
+					free (data);
 					return translate_ptp_result (ret);
 					/* wait 3 seconds at most ... use a bit of backoff logic for cameras where we should not drain compute. */
 					// usleep((++try)*5*1000);
@@ -3424,7 +3425,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 						gp_file_set_mime_type (file, ((type == 1) || (type == 11)) ? GP_MIME_JPEG : GP_MIME_RAW);
 
 						/* Add an arbitrary file name so caller won't crash */
-						gp_file_set_name (file, "preview.jpg");
+						gp_file_set_name (file, "canon_preview.jpg");
 
 						/* dump the rest of the blobs */
 						xdata = xdata+len;
@@ -3448,7 +3449,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 								size_t needed = snprintf(NULL, 0, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h) + 1;
 								char  *buffer = malloc(needed);
 								sprintf(buffer, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h);
-								buffer[needed] = 0;
+								buffer[needed - 1] = 0;
 								gp_file_set_name (file, buffer);
 								free (buffer);
 								// printf("eos zoom pos: %d, %d", eos_x, eos_y);
