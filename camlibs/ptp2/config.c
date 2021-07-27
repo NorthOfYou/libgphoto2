@@ -483,8 +483,8 @@ skip:
 		GP_LOG_D ("EOS M detected");
 
 		C_PTP (ptp_canon_eos_seteventmode(params, 2));
-		ct_val.u16 = 0x0008;
-		C_PTP (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &ct_val, PTP_DTC_UINT16));
+		ct_val.u32 = 0x0008;
+		C_PTP (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &ct_val, PTP_DTC_UINT32));
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 		usleep(1000*1000); /* 1 second */
@@ -580,8 +580,8 @@ camera_unprepare_canon_eos_capture(Camera *camera, GPContext *context) {
 	if (is_canon_eos_m (params)) {
 		PTPPropertyValue    ct_val;
 
-		ct_val.u16 = 0x0000;
-		C_PTP (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &ct_val, PTP_DTC_UINT16));
+		ct_val.u32 = 0x0000;
+		C_PTP (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &ct_val, PTP_DTC_UINT32));
 	}
 
 	/* then emits 911b and 911c ... not done yet ... */
@@ -2153,7 +2153,7 @@ _get_Canon_LiveViewSize(CONFIG_GET_ARGS) {
 		return GP_ERROR;
 	if (dpd->DataType != PTP_DTC_UINT16)
 		return GP_ERROR;
-/* actually it is a flag value, 1 = TFT, 2 = PC, 4 = MOBILE, 8 = MOBILE2 */
+/* actually it is a flag value, 1 = TFT, 2 = PC, 4 = MOBILE, 8 = PC_SMALL */
 
 	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
 	gp_widget_set_name (*widget, menu->name);
@@ -2486,8 +2486,8 @@ static struct deviceproptableu16 canon_selftimer[] = {
 };
 GENERIC16TABLE(Canon_SelfTimer,canon_selftimer)
 
-/* actually it is a flag value, 1 = TFT, 2 = PC, 4 = MOBILE, 8 = MOBILE2 */
-static struct deviceproptableu16 canon_eos_cameraoutput[] = {
+/* actually it is a flag value, 1 = TFT, 2 = PC, 4 = MOBILE, 8 = PC_SMALL */
+static struct deviceproptableu32 canon_eos_cameraoutput[] = {
 	{ N_("Off"),		0, 0 }, /*On 5DM3, LCD/TFT is off, mirror down and optical view finder enabled */
 	{ N_("TFT"),		1, 0 },
 	{ N_("PC"), 		2, 0 },
@@ -2496,12 +2496,12 @@ static struct deviceproptableu16 canon_eos_cameraoutput[] = {
 	{ N_("TFT + MOBILE"),	5, 0 },
 	{ N_("PC + MOBILE"),	6, 0 },
 	{ N_("TFT + PC + MOBILE"), 7, 0 },
-	{ N_("MOBILE2"),	8, 0 },
-	{ N_("TFT + MOBILE2"),	9, 0 },
-	{ N_("PC + MOBILE2"),	10, 0 },
-	{ N_("TFT + PC + MOBILE2"), 11, 0 },
+	{ N_("PC_SMALL"),	8, 0 },
+	{ N_("TFT + PC_SMALL"),	9, 0 },
+	{ N_("PC + PC_SMALL"),	10, 0 },
+	{ N_("TFT + PC + PC_SMALL"), 11, 0 },
 };
-GENERIC16TABLE(Canon_EOS_CameraOutput,canon_eos_cameraoutput)
+GENERIC32TABLE(Canon_EOS_CameraOutput,canon_eos_cameraoutput)
 
 static struct deviceproptableu16 canon_eos_evfrecordtarget[] = {
 	{ N_("None"),		0, 0 },
@@ -7998,11 +7998,11 @@ _put_Canon_EOS_ViewFinder(CONFIG_PUT_ARGS) {
 		}
 	}
 	if (val)
-		xval.u16 = 2;
+		xval.u32 = 2;
 	else
-		xval.u16 = 0;
-	C_PTP_MSG (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &xval, PTP_DTC_UINT16),
-		   "ptp2_eos_viewfinder enable: failed to set evf outputmode to %d", xval.u16);
+		xval.u32 = 0;
+	C_PTP_MSG (ptp_canon_eos_setdevicepropvalue (params, PTP_DPC_CANON_EOS_EVFOutputDevice, &xval, PTP_DTC_UINT32),
+		   "ptp2_eos_viewfinder enable: failed to set evf outputmode to %d", xval.u32);
         return GP_OK;
 }
 
@@ -10123,7 +10123,7 @@ static struct submenu camera_settings_menu[] = {
 	{ N_("CSM Menu"),               "csmmenu",              PTP_DPC_NIKON_CSMMenu,              PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,         _put_Nikon_OnOff_UINT8 },
 	{ N_("Reverse Command Dial"),   "reversedial",          PTP_DPC_NIKON_ReverseCommandDial,   PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,         _put_Nikon_OnOff_UINT8 },
 	{ N_("Camera Output"),          "output",               PTP_DPC_CANON_CameraOutput,         PTP_VENDOR_CANON,   PTP_DTC_UINT8,  _get_Canon_CameraOutput,        _put_Canon_CameraOutput },
-	{ N_("Camera Output"),          "output",               PTP_DPC_CANON_EOS_EVFOutputDevice,  PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_EOS_CameraOutput,    _put_Canon_EOS_CameraOutput },
+	{ N_("Camera Output"),          "output",               PTP_DPC_CANON_EOS_EVFOutputDevice,  PTP_VENDOR_CANON,   PTP_DTC_UINT32, _get_Canon_EOS_CameraOutput,    _put_Canon_EOS_CameraOutput },
 	{ N_("Recording Destination"),  "movierecordtarget",    PTP_DPC_CANON_EOS_EVFRecordStatus,  PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_EOS_EVFRecordTarget, _put_Canon_EOS_EVFRecordTarget },
 	{ N_("EVF Mode"),               "evfmode",              PTP_DPC_CANON_EOS_EVFMode,          PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_EOS_EVFMode,         _put_Canon_EOS_EVFMode },
 	{ N_("Owner Name"),             "ownername",            PTP_DPC_CANON_CameraOwner,          PTP_VENDOR_CANON,   PTP_DTC_AUINT8, _get_AUINT8_as_CHAR_ARRAY,      _put_AUINT8_as_CHAR_ARRAY },
@@ -10357,7 +10357,7 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("Live View White Balance"),        "liveviewwhitebalance",     PTP_DPC_NIKON_LiveViewWhiteBalance,     PTP_VENDOR_NIKON,   PTP_DTC_UINT16, _get_WhiteBalance,                  _put_WhiteBalance },
 	{ N_("Live View Size"),                 "liveviewsize",             PTP_DPC_FUJI_LiveViewImageSize,         PTP_VENDOR_FUJI,    PTP_DTC_UINT16, _get_Fuji_LiveViewSize,             _put_Fuji_LiveViewSize },
 	{ N_("Live View Size"),                 "liveviewsize",             PTP_DPC_SONY_QX_LiveviewResolution,     PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_QX_LiveViewSize,          _put_Sony_QX_LiveViewSize },
-	{ N_("Live View Size"),                 "liveviewsize",             PTP_DPC_CANON_EOS_EVFOutputDevice,      PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_LiveViewSize,            _put_Canon_LiveViewSize },
+	{ N_("Live View Size"),                 "liveviewsize",             PTP_DPC_CANON_EOS_EVFOutputDevice,      PTP_VENDOR_CANON,   PTP_DTC_UINT32, _get_Canon_LiveViewSize,            _put_Canon_LiveViewSize },
 	{ N_("File Number Sequencing"),         "filenrsequencing",         PTP_DPC_NIKON_FileNumberSequence,       PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("Flash Sign"),                     "flashsign",                PTP_DPC_NIKON_FlashSign,                PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("Modelling Flash"),                "modelflash",               PTP_DPC_NIKON_E4ModelingFlash,          PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OffOn_UINT8,             _put_Nikon_OffOn_UINT8 },

@@ -2318,6 +2318,7 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case PTP_DPC_CANON_EOS_FlashChargingState:
 				case PTP_DPC_CANON_EOS_MovieServoAF:
 				case PTP_DPC_CANON_EOS_MultiAspect:
+				case PTP_DPC_CANON_EOS_EVFOutputDevice:
 					dpd->DataType = PTP_DTC_UINT32;
 					break;
 				/* enumeration for AEM is never provided, but is available to set */
@@ -2340,7 +2341,6 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case PTP_DPC_CANON_EOS_BracketMode:
 				case PTP_DPC_CANON_EOS_QuickReviewTime:
 				case PTP_DPC_CANON_EOS_EVFMode:
-				case PTP_DPC_CANON_EOS_EVFOutputDevice:
 				case PTP_DPC_CANON_EOS_EVFRecordStatus:
 				case PTP_DPC_CANON_EOS_HighISOSettingNoiseReduction:
 					dpd->DataType = PTP_DTC_UINT16;
