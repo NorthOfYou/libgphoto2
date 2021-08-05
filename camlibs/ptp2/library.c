@@ -6734,7 +6734,7 @@ camera_wait_for_event (Camera *camera, int timeout,
 					return GP_OK;
 				case PTP_CANON_EOS_CHANGES_TYPE_FOCUSINFO:
 					*eventtype = GP_EVENT_UNKNOWN;
-					C_MEM (*eventdata = malloc(strlen("Focus Info 12345678901234567890123456789")+1));
+					C_MEM (*eventdata = malloc(strlen("Focus Info 12345678901234567890123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")+1));
 					sprintf (*eventdata, "Focus Info %s", entry.u.info);
 					return GP_OK;
 				case PTP_CANON_EOS_CHANGES_TYPE_FOCUSMASK:
