@@ -3388,13 +3388,17 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 				while ((xdata-data) < size) {
 					uint32_t	len  = dtoh32a(xdata);
 					uint32_t	type = dtoh32a(xdata+4);
+					int found_eos_zoompos, found_eos_focus_state = 0;
+					int32_t eos_x, eos_y, rect_w, rect_h;
+					int32_t eos_focus_state;
 
 					/* 4 byte len of jpeg data, 4 byte type */
 					/* JPEG blob */
 					/* stuff */
 					GP_LOG_D ("get_viewfinder_image header: len=%d type=%d", len, type);
-					// printf("live view type: %d", type);
+					// printf("get_viewfinder_image header: len=%d type=0x%08x\n", len, type);
 					switch (type) {
+					// default only executes if on the specified image types (9,1,11) have not been encountered
 					default:
 						if (len > (size-(xdata-data))) {
 							len = size;
@@ -3424,10 +3428,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 						gp_file_set_mime_type (file, ((type == 1) || (type == 11)) ? GP_MIME_JPEG : GP_MIME_RAW);
 
-						/* Add an arbitrary file name so caller won't crash */
-						gp_file_set_name (file, "canon_preview.jpg");
-
-						/* dump the rest of the blobs */
+						/* dump the rest of the blobs, logging and searching for additional metadata */
 						xdata = xdata+len;
 						while ((xdata-data) < size) {
 							len  = dtoh32a(xdata);
@@ -3441,18 +3442,17 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 
 							// pull the eoszoompos out
 							if (type == 13) {
-								int32_t eos_x = dtoh32a(xdata+8);
-								int32_t eos_y = dtoh32a(xdata+12);
-								int32_t rect_w = dtoh32a(xdata+16);
-								int32_t rect_h = dtoh32a(xdata+20);
+								found_eos_zoompos = 1;
+								eos_x = dtoh32a(xdata+8);
+								eos_y = dtoh32a(xdata+12);
+								rect_w = dtoh32a(xdata+16);
+								rect_h = dtoh32a(xdata+20);
+							}
 
-								size_t needed = snprintf(NULL, 0, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h) + 1;
-								char  *buffer = malloc(needed);
-								sprintf(buffer, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h);
-								buffer[needed - 1] = 0;
-								gp_file_set_name (file, buffer);
-								free (buffer);
-								// printf("eos zoom pos: %d, %d", eos_x, eos_y);
+							// pull focus state
+							if (type == 8) {
+								found_eos_focus_state = 1;
+								eos_focus_state = dtoh32a(xdata+12);
 							}
 
 							GP_LOG_D ("get_viewfinder_image header: len=%d type=%d", len, type);
@@ -3467,6 +3467,37 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 							// printf("\n");
 							xdata = xdata+len;
 						}
+
+						/* Add an arbitrary file name so caller won't crash */
+						if (found_eos_zoompos && found_eos_focus_state) {
+							size_t needed = snprintf(NULL, 0, "capture_preview-%d-%d-%d-%d;focusstate=%d.jpg", eos_x, eos_y, rect_w, rect_h, eos_focus_state) + 1;
+							char  *buffer = malloc(needed);
+							sprintf(buffer, "capture_preview-%d-%d-%d-%d;focusstate=%d.jpg", eos_x, eos_y, rect_w, rect_h, eos_focus_state);
+							buffer[needed - 1] = 0;
+							//printf("setting file_name = %s\n", buffer);
+							gp_file_set_name (file, buffer);
+							free (buffer);
+						} else if (found_eos_zoompos) {
+							size_t needed = snprintf(NULL, 0, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h) + 1;
+							char  *buffer = malloc(needed);
+							sprintf(buffer, "capture_preview-%d-%d-%d-%d.jpg", eos_x, eos_y, rect_w, rect_h);
+							buffer[needed - 1] = 0;
+							//printf("setting file_name = %s\n", buffer);
+							gp_file_set_name (file, buffer);
+							free (buffer);
+						} else if (found_eos_focus_state) {
+							size_t needed = snprintf(NULL, 0, "capture_preview;focusstate=%d.jpg", eos_focus_state) + 1;
+							char  *buffer = malloc(needed);
+							sprintf(buffer, "capture_preview;focusstate=%d.jpg", eos_focus_state);
+							buffer[needed - 1] = 0;
+							//printf("setting file_name = %s\n", buffer);
+							gp_file_set_name (file, buffer);
+							free (buffer);
+						} else {
+							gp_file_set_name (file, "canon_preview.jpg");
+						}
+
+
 						free (data);
 						SET_CONTEXT_P(params, NULL);
 						return GP_OK;
