@@ -3081,6 +3081,8 @@ _put_Sony_ISO(CONFIG_PUT_ARGS)
 
 	propval->u32 = raw_iso;
 
+	printf("OLD SONY PUT ISO\n");
+
 	return _put_sony_value_u32(params, dpd->DevicePropertyCode, raw_iso, 1);
 }
 
@@ -3093,6 +3095,9 @@ _put_Sony_ISO2(CONFIG_PUT_ARGS)
 	PTPParams	*params = &(camera->pl->params);
 
 	CR (gp_widget_get_value(widget, &value));
+
+	printf("NEW SONY PUT ISO2 %s\n", value);
+
 	CR (_parse_Sony_ISO(value, &raw_iso));
 
 	propval->u32 = raw_iso;
@@ -3411,6 +3416,16 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS)
 		propval->u16 = fvalue*100;
 	else
 		return GP_ERROR;
+
+	// try fast update. even though we're updating aperture, we check for the presence
+	// of PTP_DPC_SONY_ShutterSpeed2 to see if we can do the fast update
+	// NB: Does not work currently
+	// if (have_prop (camera, PTP_VENDOR_SONY, PTP_DPC_SONY_ShutterSpeed2)) {
+	// 	printf("Sony: Fast update aperture -> %d\n", (uint16_t)fvalue*100);
+	// 	return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_FNumber, propval, PTP_DTC_UINT16));
+	// }
+
+	// fallback to old update
 	return _put_sony_value_u16 (params, PTP_DPC_FNumber, fvalue*100, 0);
 }
 
@@ -5182,11 +5197,7 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 		}
 		new32 = (x<<16)|y;
 	}
-	/* new style */
-	if (have_prop (camera, PTP_VENDOR_SONY, PTP_DPC_SONY_ShutterSpeed2)) {
-		propval->u32 = new32;
-		return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_SONY_ShutterSpeed2, propval, PTP_DTC_UINT32));
-	}
+
 	/* old style uses stepping */
 
 	new = ((float)x)/(float)y;
@@ -5296,6 +5307,50 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 	} while (1);
 	propval->u32 = new;
 	return GP_OK;
+}
+
+static int
+_put_Sony_ShutterSpeed2(CONFIG_PUT_ARGS)
+{
+	int			x,y;
+	const char		*val;
+	uint32_t		new32;
+	PTPParams		*params = &(camera->pl->params);
+
+	CR (gp_widget_get_value (widget, &val));
+
+	printf("SONY SHUTTERSPEED 2 -> %s\n", val);
+
+	if (dpd->CurrentValue.u32 == 0) {
+		x = 65536; y = 1;
+	} else {
+		x = dpd->CurrentValue.u32>>16;
+		y = dpd->CurrentValue.u32&0xffff;
+	}
+
+	printf("SONY SHUTTERSPEED 2 current value x:%d y:%d\n", x, y);
+
+	if (!strcmp(val,_("Bulb"))) {
+		new32 = 0;
+		x = 65536; y = 1;
+	} else {
+		if (2!=sscanf(val, "%d/%d", &x, &y)) {
+			// when settting whole seconds e.g. 30, 20
+			// need to scale these correctly
+			if (1==sscanf(val,"%d", &x)) {
+				x = x * 10;
+				y = 10;
+			} else {
+				return GP_ERROR_BAD_PARAMETERS;
+			}
+		}
+
+		printf("SONY SHUTTERSPEED 2 new value x:%d y:%d\n", x, y);
+		new32 = (x<<16)|y;
+	}
+
+	propval->u32 = new32;
+	return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_SONY_ShutterSpeed, propval, PTP_DTC_UINT32));
 }
 
 static int
@@ -10173,9 +10228,9 @@ static struct submenu image_settings_menu[] = {
 	{ N_("Movie ISO Speed"),        "movieiso",             PTP_DPC_NIKON_MovieISO,                 PTP_VENDOR_NIKON,   PTP_DTC_UINT32, _get_INT,                       _put_INT },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_CANON_EOS_ISOSpeed,             PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_ISO,                 _put_Canon_ISO },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_SONY_QX_ISO,                    PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_ISO,                  _put_Sony_QX_ISO },
-	/* these 2 iso will overwrite and conflicht with each other... the older Sony do not have d226, so it should pick the next entry ... */
-	{ N_("ISO Speed"),              "iso",                  PTP_DPC_SONY_ISO2,                      PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_ISO,                  _put_Sony_ISO2 },
+	/* these 2 iso will overwrite and conflicht with each other... the older Sony do not have d226, so it should pick the next entry (doesn't work on 7s-III, which has both keys. renamed to iso2) ... */
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_SONY_ISO,                       PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_ISO,                  _put_Sony_ISO },
+	{ N_("ISO Speed (fast update)"),"iso2" ,                PTP_DPC_SONY_ISO2,                      PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_ISO,                  _put_Sony_ISO2 },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_NIKON_1_ISO,                    PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_1_ISO,               _put_Nikon_1_ISO },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_OLYMPUS_ISO,                    PTP_VENDOR_GP_OLYMPUS_OMD, PTP_DTC_UINT16,  _get_Olympus_ISO,       _put_Olympus_ISO },
 	{ N_("ISO Speed"),              "iso",             	0,         		    		PTP_VENDOR_PANASONIC,   PTP_DTC_UINT32, _get_Panasonic_ISO,         _put_Panasonic_ISO },
@@ -10320,8 +10375,9 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_OLYMPUS_Shutterspeed,           PTP_VENDOR_GP_OLYMPUS_OMD,   PTP_DTC_UINT32, _get_Olympus_ShutterSpeed, _put_Olympus_ShutterSpeed },
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_CANON_EOS_ShutterSpeed,         PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_ShutterSpeed,            _put_Canon_ShutterSpeed },
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_FUJI_ShutterSpeed,              PTP_VENDOR_FUJI,    PTP_DTC_INT16,  _get_Fuji_ShutterSpeed,             _put_Fuji_ShutterSpeed },
-	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_SONY_ShutterSpeed2,             PTP_VENDOR_SONY,    PTP_DTC_UINT32,  _get_Sony_ShutterSpeed,             _put_Sony_ShutterSpeed },
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_SONY_ShutterSpeed,              PTP_VENDOR_SONY,    PTP_DTC_UINT32,  _get_Sony_ShutterSpeed,             _put_Sony_ShutterSpeed },
+	/* _put_Sony_ShutterSpeed2 will actually update PTP_DPC_SONY_ShutterSpeed here, but need a unique key to make this visible */
+	{ N_("Shutter Speed (fast update)"),		"shutterspeed2",            PTP_DPC_SONY_ShutterSpeed2,             PTP_VENDOR_SONY,    PTP_DTC_UINT32,  _get_Sony_ShutterSpeed,             _put_Sony_ShutterSpeed2 },
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_RICOH_ShutterSpeed,             PTP_VENDOR_PENTAX,  PTP_DTC_UINT64, _get_Ricoh_ShutterSpeed,            _put_Ricoh_ShutterSpeed },
 	{ N_("Shutter Speed"),                  "shutterspeed",             PTP_DPC_GP_SIGMA_FP_ShutterSpeed,       PTP_VENDOR_GP_SIGMAFP, PTP_DTC_UINT64, _get_SigmaFP_ShutterSpeed,       _put_SigmaFP_ShutterSpeed },
 	{ N_("Aperture"),                  	"aperture",		    PTP_DPC_GP_SIGMA_FP_Aperture,           PTP_VENDOR_GP_SIGMAFP, PTP_DTC_UINT64, _get_SigmaFP_Aperture,           _put_SigmaFP_Aperture },
