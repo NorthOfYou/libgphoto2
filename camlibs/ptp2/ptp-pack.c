@@ -1073,6 +1073,22 @@ ptp_unpack_Sony_DPD (PTPParams *params, unsigned char* data, PTPDevicePropDesc *
 		break;
 	case PTP_DPFF_Enumeration: {
 		int i;
+		if(has_sony_mode_300(params)) {
+			// there are 2 list of enum values, sometimes different?
+			// currently we discard the first list keep the second
+			int n = dtoh16a(&data[*poffset]);	
+			*poffset+=sizeof(uint16_t);
+			PTPPropertyValue v;
+			for(i=0;i<n;i++) {
+				ret = ptp_unpack_DPV (params, data, poffset, dpdlen, &v, dpd->DataType);
+				if (!ret) {
+					if (!i)
+						goto outofmemory;
+					dpd->FORM.Enum.NumberOfValues = i;
+					break;
+				}
+			}
+		}
 #define N	dpd->FORM.Enum.NumberOfValues
 		N = dtoh16a(&data[*poffset]);
 		*poffset+=sizeof(uint16_t);
@@ -1095,6 +1111,23 @@ ptp_unpack_Sony_DPD (PTPParams *params, unsigned char* data, PTPDevicePropDesc *
 				break;
 			}
 		}
+
+		// if(has_sony_mode_300(params)) {
+		// 	// there are 2 list of enum values, sometimes different?
+		// 	// currently we keep the first list discard the second
+		// 	int n = dtoh16a(&data[*poffset]);	
+		// 	*poffset+=sizeof(uint16_t);
+		// 	PTPPropertyValue v;
+		// 	for(i=0;i<n;i++) {
+		// 		ret = ptp_unpack_DPV (params, data, poffset, dpdlen, &v, dpd->DataType);
+		// 		if (!ret) {
+		// 			if (!i)
+		// 				goto outofmemory;
+		// 			dpd->FORM.Enum.NumberOfValues = i;
+		// 			break;
+		// 		}
+		// 	}
+		// }
 		}
 	}
 #undef N
