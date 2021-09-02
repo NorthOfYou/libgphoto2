@@ -3402,32 +3402,113 @@ _get_Sony_FNumber(CONFIG_GET_ARGS) {
 }
 
 
+// static int
+// _put_Sony_FNumber(CONFIG_PUT_ARGS)
+// {
+// 	float		fvalue = 0.0;
+// 	char *		value;
+// 	PTPParams	*params = &(camera->pl->params);
+//
+// 	CR (gp_widget_get_value (widget, &value));
+// 	if (strstr (value, "f/") == value)
+// 		value += strlen("f/");
+// 	if (sscanf(value, "%g", &fvalue))
+// 		propval->u16 = fvalue*100;
+// 	else
+// 		return GP_ERROR;
+//
+// 	// try fast update. even though we're updating aperture, we check for the presence
+// 	// of PTP_DPC_SONY_ShutterSpeed2 to see if we can do the fast update
+// 	// if (have_prop (camera, PTP_VENDOR_SONY, PTP_DPC_SONY_ShutterSpeed2)) {
+// 	// 	printf("Sony: Fast update aperture -> %d\n", (uint16_t)(fvalue*100));
+// 	// 	return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_FNumber, propval, PTP_DTC_UINT16));
+// 	// }
+//
+// 	// fallback to old update
+// 	return _put_sony_value_u16 (params, PTP_DPC_FNumber, fvalue*100, 0);
+// }
+
 static int
-_put_Sony_FNumber(CONFIG_PUT_ARGS)
-{
-	float		fvalue = 0.0;
-	char *		value;
-	PTPParams	*params = &(camera->pl->params);
+_put_Sony_FNumber(CONFIG_PUT_ARGS) {
+	PTPParams		*params = &(camera->pl->params);
+	GPContext 		*context = ((PTPData *) params->data)->context;
+	PTPPropertyValue	moveval;
 
-	CR (gp_widget_get_value (widget, &value));
-	if (strstr (value, "f/") == value)
-		value += strlen("f/");
-	if (sscanf(value, "%g", &fvalue))
-		propval->u16 = fvalue*100;
-	else
-		return GP_ERROR;
+	char* targetstr;
+	float targetf, currentf, targetStops, currentStops, moves;
 
-	// try fast update. even though we're updating aperture, we check for the presence
-	// of PTP_DPC_SONY_ShutterSpeed2 to see if we can do the fast update
-	// NB: Does not work currently
-	// if (have_prop (camera, PTP_VENDOR_SONY, PTP_DPC_SONY_ShutterSpeed2)) {
-	// 	printf("Sony: Fast update aperture -> %d\n", (uint16_t)fvalue*100);
-	// 	return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_FNumber, propval, PTP_DTC_UINT16));
-	// }
+	float maxApertureStops = 12;
+	float lastValuef = 0;
 
-	// fallback to old update
-	return _put_sony_value_u16 (params, PTP_DPC_FNumber, fvalue*100, 0);
+
+	// Pull the target value
+	CR (gp_widget_get_value (widget, &targetstr));
+
+	// parse out the float
+	sscanf(targetstr, "f/%g", &targetf);
+
+	// printf("sony target aperture %g\n", targetf);
+
+	targetStops = maxApertureStops - (float)(log(targetf*targetf) / log(2));
+
+	do {
+
+		C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));
+
+		currentf = ((float)dpd->CurrentValue.u16) / 100.0;
+
+		// printf("sony current aperture %g\n", currentf);
+
+		// Check how many stops we need to move
+		currentStops = maxApertureStops - (float)(log(currentf*currentf) / log(2));
+
+		// How many moves to get to the target (assumes camera is setup for 1/3rd stops)
+		moves = (currentStops - targetStops) * 3;
+
+		if (moves < 0.1 && moves > -0.1) {
+			break; // close enough
+		} else if (moves > 0) {
+			moveval.u8 = 0x01;
+		} else {
+			moveval.u8 = 0xff;
+		}
+
+		if (moves < 0 && moves > -2) {
+			moves = -1;
+		} else if (moves > 0 && moves < 2) {
+			moves = 1;
+		}
+
+		// Make the number of predicted moves
+		for (int i=0;i < ceil(abs(moves));i++) {
+			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
+			usleep(1000);
+		}
+
+		if (targetf == currentf) {
+			// Hit target value
+			break;
+		}
+
+		// Check to make sure we're not stuck not movie
+		if (lastValuef != 0 && abs(currentf - lastValuef) < 0.3) {
+			// No movement
+			break;
+		}
+		lastValuef = currentf;
+
+		// sleep time
+		// 350,000 on A7SIII : Traversal f/1.8 -> f/22 0.98s, avg jump time: 0.5994023815375208
+		// 300,000 on A7SIII : Traversal f/1.8 -> f/22 0.820346583997889, avg jump time: 0.5268628827114068
+		// <300,000 had failed jumps
+
+		usleep(300000);
+	} while(1);
+
+	return GP_OK;
 }
+
 
 static int
 _get_ExpTime(CONFIG_GET_ARGS) {
@@ -10280,7 +10361,7 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("Self Timer"),                     "selftimer",                PTP_DPC_CANON_SelfTime,                 PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_SelfTimer,               _put_Canon_SelfTimer },
 	{ N_("Assist Light"),                   "assistlight",              PTP_DPC_NIKON_AFAssist,                 PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("Exposure Compensation"),          "exposurecompensation",     PTP_DPC_OLYMPUS_ExposureCompensation,   PTP_VENDOR_GP_OLYMPUS_OMD, PTP_DTC_UINT16,  _get_Olympus_ExpCompensation,_put_Olympus_ExpCompensation },
-	{ N_("Exposure Compensation"),          "exposurecompensation",     PTP_DPC_SONY_ExposureCompensation,      PTP_VENDOR_SONY,    PTP_DTC_INT16,  _get_ExpCompensation,               _put_Sony_ExpCompensation2 },
+	{ N_("Exposure Compensation (fast update)"),"exposurecompensation2",    PTP_DPC_SONY_ExposureCompensation,      PTP_VENDOR_SONY,    PTP_DTC_INT16,  _get_ExpCompensation,               _put_Sony_ExpCompensation2 },
 	{ N_("Exposure Compensation"),          "exposurecompensation",     PTP_DPC_SONY_QX_ExposureCompensation,   PTP_VENDOR_SONY,    PTP_DTC_INT16,  _get_ExpCompensation,               _put_ExpCompensation },
 	{ N_("Exposure Compensation"),          "exposurecompensation",     PTP_DPC_ExposureBiasCompensation,       PTP_VENDOR_SONY,    PTP_DTC_INT16,  _get_ExpCompensation,               _put_Sony_ExpCompensation },
 	{ N_("Exposure Compensation"),          "exposurecompensation",     PTP_DPC_ExposureBiasCompensation,       0,                  PTP_DTC_INT16,  _get_ExpCompensation,               _put_ExpCompensation },
