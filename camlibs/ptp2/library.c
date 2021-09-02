@@ -3389,7 +3389,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 					uint32_t	len  = dtoh32a(xdata);
 					uint32_t	type = dtoh32a(xdata+4);
 					int found_eos_zoompos, found_eos_focus_state = 0;
-					int32_t eos_x, eos_y, rect_w, rect_h;
+					int32_t eos_x, eos_y, rect_w, rect_h = 0;
 					int32_t eos_focus_state;
 
 					/* 4 byte len of jpeg data, 4 byte type */
