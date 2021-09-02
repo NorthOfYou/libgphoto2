@@ -3431,6 +3431,25 @@ _get_Sony_FNumber(CONFIG_GET_ARGS) {
 static int
 _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 	PTPParams		*params = &(camera->pl->params);
+
+	if( has_sony_mode_300(params) ) {
+		float		fvalue = 0.0;
+		char *		value;
+		PTPParams	*params = &(camera->pl->params);
+
+		CR (gp_widget_get_value (widget, &value));
+		if (strstr (value, "f/") == value)
+			value += strlen("f/");
+		if (sscanf(value, "%g", &fvalue))
+			propval->u16 = fvalue*100;
+		else
+			return GP_ERROR;
+
+		//printf("putting sony fnumber for mode 300: %d\n", propval->u16);
+
+		return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_FNumber, propval, PTP_DTC_UINT16));
+	}
+	
 	GPContext 		*context = ((PTPData *) params->data)->context;
 	PTPPropertyValue	moveval;
 
