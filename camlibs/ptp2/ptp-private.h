@@ -143,6 +143,14 @@ have_eos_prop(PTPParams *params, uint16_t vendor, uint16_t prop) {
 }
 
 static inline int
+has_sony_mode_300(PTPParams *params) {
+	if (params->deviceinfo.VendorExtensionID != PTP_VENDOR_SONY) return 0;
+	if (!strcmp(params->deviceinfo.Model, "ILCE-7SM3")) return 1;
+	// TODO add other mode 300 camera models
+	return 0;
+}
+
+static inline int
 have_sigma_prop(PTPParams *params, uint16_t vendor, uint16_t prop) {
 	/* The special Canon EOS property set gets special treatment. */
 	if ((params->deviceinfo.VendorExtensionID != PTP_VENDOR_GP_SIGMAFP) || (vendor != PTP_VENDOR_GP_SIGMAFP))
