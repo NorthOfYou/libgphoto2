@@ -5342,6 +5342,40 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 
 	CR (gp_widget_get_value (widget, &val));
 
+	if( has_sony_mode_300(params) ) {
+		int ret;
+
+		if (dpd->CurrentValue.u32 == 0) {
+			x = 65536; y = 1;
+		} else {
+			x = dpd->CurrentValue.u32>>16;
+			y = dpd->CurrentValue.u32&0xffff;
+		}
+
+		if (!strcmp(val,_("Bulb"))) {
+			new32 = 0;
+			x = 65536; y = 1;
+		} else {
+			if (2!=sscanf(val, "%d/%d", &x, &y)) {
+				// when settting whole seconds e.g. 30, 20
+				// need to scale these correctly
+				if (1==sscanf(val,"%d", &x)) {
+					x = x * 10;
+					y = 10;
+				} else {
+					return GP_ERROR_BAD_PARAMETERS;
+				}
+			}
+			new32 = (x<<16)|y;
+		}
+
+		propval->u32 = new32;
+
+		ret = translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
+		if (ret == GP_OK) ret = PUT_OK;
+		return ret;
+	}
+
 	if (dpd->CurrentValue.u32 == 0) {
 		x = 65536; y = 1;
 	} else {
