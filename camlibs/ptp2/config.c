@@ -1631,10 +1631,19 @@ _put_ExpCompensation(CONFIG_PUT_ARGS) {
 static int
 _put_Sony_ExpCompensation(CONFIG_PUT_ARGS) {
 	int ret;
+	PTPParams		*params = &(camera->pl->params);
 
 	ret = _put_ExpCompensation(CONFIG_PUT_NAMES);
 	if (ret != GP_OK) return ret;
-	return _put_sony_value_i16 (&camera->pl->params, dpd->DevicePropertyCode, propval->i16, 0);
+
+	if ( has_sony_mode_300(params) ){
+		ret = translate_ptp_result (ptp_sony_setdevicecontrolvaluea (&camera->pl->params, dpd->DevicePropertyCode, propval, PTP_DTC_INT16));
+		if (ret == GP_OK) ret = PUT_OK;
+	} else {
+		ret = _put_sony_value_i16 (&camera->pl->params, dpd->DevicePropertyCode, propval->i16, 0);
+	}
+	return ret;
+
 }
 
 /* new method, can set directly */
