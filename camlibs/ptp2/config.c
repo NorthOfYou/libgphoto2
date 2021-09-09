@@ -2139,11 +2139,11 @@ static struct deviceproptableu8 sony_qx_liveviewsize[] = {
 };
 GENERIC8TABLE(Sony_QX_LiveViewSize,sony_qx_liveviewsize)
 
-static struct deviceproptablei8 sony_prioritymode[] = {
+static struct deviceproptableu8 sony_prioritymode[] = {
 	{ N_("Camera"),		0, 0 },
 	{ N_("Application"),	1, 0 },
 };
-GENERICI8TABLE(Sony_PriorityMode,sony_prioritymode)
+GENERIC8TABLE(Sony_PriorityMode,sony_prioritymode)
 
 static int
 _get_Canon_LiveViewSize(CONFIG_GET_ARGS) {
