@@ -8938,7 +8938,7 @@ _put_Sony_ManualFocus(CONFIG_PUT_ARGS)
 		C_PTP (ptp_sony_setdevicecontrolvalueb (params, 0xd2d2, &xpropval, PTP_DTC_UINT16));
 	}
 
-	return GP_OK;
+	return PUT_OK;
 }
 
 static int
