@@ -4621,6 +4621,8 @@ ptp_sony_setdevicecontrolvaluea (PTPParams* params, uint16_t propcode,
 
 	PTP_CNT_INIT(ptp, PTP_OC_SONY_SetControlDeviceA, propcode);
 	size = ptp_pack_DPV(params, value, &data, datatype);
+	printf("SetControlDeviceA(%04x, %04x)\n", propcode, datatype);
+	dump_hex(stdout, data, size);
 	ret = ptp_transaction(params, &ptp, PTP_DP_SENDDATA, size, &data, NULL);
 	free(data);
 	return ret;
