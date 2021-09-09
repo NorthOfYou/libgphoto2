@@ -10326,7 +10326,6 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Synchronize camera date and time with PC (UTC)"),"syncdatetimeutc", PTP_DPC_CANON_EOS_UTCTime, PTP_VENDOR_CANON, PTP_DTC_UINT32, _get_Canon_SyncTime, _put_Canon_SyncTime },
 	{ N_("Synchronize camera date and time with PC"),"syncdatetime", PTP_DPC_CANON_EOS_CameraTime, PTP_VENDOR_CANON, PTP_DTC_UINT32, _get_Canon_SyncTime, _put_Canon_SyncTime },
 
-	{ N_("Auto-Focus"),                     "autofocus",        PTP_DPC_SONY_AutoFocus, PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_Autofocus,            _put_Sony_Autofocus },
 	{ N_("Manual-Focus"),                   "manualfocus",      PTP_DPC_SONY_NearFar,   PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_ManualFocus,          _put_Sony_ManualFocus },
 	{ N_("Auto-Focus"),                     "autofocus",        PTP_DPC_SONY_AutoFocus, PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_Autofocus,            _put_Sony_Autofocus },
 	{ N_("Set Sony AF-Area"),               "changeafarea",     PTP_DPC_SONY_AF_Area_Position, PTP_VENDOR_SONY, PTP_DTC_UINT32, _get_Sony_AF_Area_Position, _put_Sony_AF_Area_Position },
