@@ -3889,6 +3889,57 @@ static struct deviceproptableu16 exposure_program_modes[] = {
 };
 GENERIC16TABLE(ExposureProgram,exposure_program_modes)
 
+static struct deviceproptableu32 sony_300_exposure_program_modes[] = {
+	{ N_("P"),         0x00010002, 0 },
+	{ N_("A"),         0x00020003, 0 },
+	{ N_("S"),         0x00030004, 0 },
+	{ N_("M"),         0x00000001, 0 },
+	{ N_("Movie (P)"), 0x00078050, 0 },
+	{ N_("Movie (A)"), 0x00078051, 0 },
+	{ N_("Movie (S)"), 0x00078052, 0 },
+	{ N_("Movie (M)"), 0x00078053, 0 },
+	{ N_("S&Q (P)"),   0x00098059, 0 },
+	{ N_("S&Q (A)"),   0x0009805A, 0 },
+	{ N_("S&Q (S)"),   0x0009805B, 0 },
+	{ N_("S&Q (M)"),   0x0009805C, 0 },
+	{ N_("Intelligent Auto"), 0x00048000, 0 },
+}; 
+
+GENERIC32TABLE(Sony_300_ExposureProgram, sony_300_exposure_program_modes)
+
+static int
+_get_Sony_ExposureProgram(CONFIG_GET_ARGS){
+	int ret;
+	PTPParams	*params = &(camera->pl->params);
+	
+
+	if( has_sony_mode_300(params) ) {
+		ret = _get_Sony_300_ExposureProgram(camera, widget, menu, dpd);
+	} else {
+		ret = _get_ExposureProgram(camera, widget, menu, dpd);
+	}
+	return ret;
+}
+
+static int
+_put_Sony_ExposureProgram(CONFIG_PUT_ARGS){
+	PTPParams	*params = &(camera->pl->params);
+	int ret;
+
+	if( has_sony_mode_300(params) ) {
+		ret = _put_Sony_300_ExposureProgram(camera, widget, propval, dpd);
+		printf("propval->u32 = %08X\n", propval->u32);
+		if (ret == GP_OK) {
+			ret = translate_ptp_result (ptp_sony_setdevicecontrolvaluea (params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
+			if (ret == GP_OK) ret = PUT_OK;
+		}
+	} else {
+		ret = _put_ExposureProgram(camera, widget, propval, dpd);
+	}
+
+	return ret;
+}
+
 static struct deviceproptableu8 nikon_scenemode[] = {
 	{ N_("Night landscape"),	0, 0 },
 	{ N_("Party/Indoor"),		1, 0 },
