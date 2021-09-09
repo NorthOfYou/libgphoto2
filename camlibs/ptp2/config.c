@@ -3459,9 +3459,7 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 		else
 			return GP_ERROR;
 
-		//printf("putting sony fnumber for mode 300: %d\n", propval->u16);
-
-		return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, PTP_DPC_FNumber, propval, PTP_DTC_UINT16));
+		return GP_OK;
 	}
 	
 	GPContext 		*context = ((PTPData *) params->data)->context;
