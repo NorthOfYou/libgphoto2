@@ -70,6 +70,8 @@
 
 #define SET_CONTEXT(camera, ctx) ((PTPData *) camera->pl->params.data)->context = ctx
 
+#define PUT_OK 100
+
 int
 have_prop(Camera *camera, uint16_t vendor, uint16_t prop) {
 	unsigned int i;
@@ -11347,7 +11349,7 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 						gp_context_error (context, _("Sorry, the property '%s' / 0x%04x is currently read-only."), _(cursub->label), cursub->propid);
 						ret = GP_ERROR_NOT_SUPPORTED;
 					}
-					if (ret != GP_OK) {
+					if (ret == GP_OK) {
 						ret_ptp = LOG_ON_PTP_E (ptp_generic_setdevicepropvalue (params, cursub->propid, &propval, cursub->type));
 						if (ret_ptp != PTP_RC_OK) {
 							gp_context_error (context, _("The property '%s' / 0x%04x was not set (0x%04x: %s)"),
@@ -11357,6 +11359,7 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 						ptp_free_devicepropvalue (cursub->type, &propval);
 					}
 					ptp_free_devicepropdesc(&dpd);
+					if (ret == PUT_OK) ret = GP_OK;
 					if (ret == GP_OK) continue; /* see if we have another match */
 				} else {
 					ret = cursub->putfunc (camera, widget, NULL, NULL);
