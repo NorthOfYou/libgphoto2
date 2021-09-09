@@ -3092,7 +3092,9 @@ _put_Sony_ISO(CONFIG_PUT_ARGS)
 
 	propval->u32 = raw_iso;
 
-	printf("OLD SONY PUT ISO\n");
+	if( has_sony_mode_300(params) ) {
+		return GP_OK;
+	}
 
 	return _put_sony_value_u32(params, dpd->DevicePropertyCode, raw_iso, 1);
 }
@@ -3113,7 +3115,8 @@ _put_Sony_ISO2(CONFIG_PUT_ARGS)
 
 	propval->u32 = raw_iso;
 
-	return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
+	//return translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
+	return GP_OK;
 }
 
 static int
