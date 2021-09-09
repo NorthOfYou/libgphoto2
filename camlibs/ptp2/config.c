@@ -8821,6 +8821,63 @@ _put_Sony_Autofocus(CONFIG_PUT_ARGS)
 }
 
 static int
+_get_Sony_AF_Area_Position(CONFIG_GET_ARGS) {
+	gp_widget_new (GP_WIDGET_TEXT, _(menu->label), widget);
+	gp_widget_set_name (*widget,menu->name);
+
+	gp_widget_set_value (*widget, "0x0");
+	return (GP_OK);
+}
+
+static int
+_put_Sony_AF_Area_Position(CONFIG_PUT_ARGS) {
+	char *val;
+	int x,y;
+	uint8_t packed[4];
+	PTPParams *params = &(camera->pl->params);
+	
+	CR (gp_widget_get_value(widget, &val));
+
+	C_PARAMS (2 == sscanf(val, "%dx%d", &x, &y));
+
+	htod16a(packed,x);
+	htod16a(packed+2,y);
+	propval->u32 = *(uint32_t*)packed;
+
+	//printf("AF_Area_Position x=%d, y=%d\n", x, y);
+	//printf("packed coord:\n");
+	//dump_hex(stdout, packed, 4);
+
+	C_PTP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_SONY_AF_Area_Position, propval, PTP_DTC_UINT32));
+
+	return PUT_OK;
+}
+
+static struct deviceproptableu16 sony_focus_area[] = {
+	{ N_("Wide"),        0x0001, 0 },
+	{ N_("Zone"),        0x0002, 0 },
+	{ N_("Center"),      0x0003, 0 },
+	{ N_("Spot S"),      0x0101, 0 },
+	{ N_("Spot M"),      0x0102, 0 },
+	{ N_("Spot L"),      0x0103, 0 },
+	{ N_("Expand Spot"), 0x0104, 0 },
+};
+
+GENERIC16TABLE(Sony_FocusArea, sony_focus_area)
+
+static int
+_get_Sony_FocusStatus(CONFIG_GET_ARGS) {
+	char 			buf[20];
+	PTPParams 		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_TEXT, _(menu->label), widget);
+	gp_widget_set_name (*widget,menu->name);
+	sprintf(buf, "%d", dpd->CurrentValue.u8);
+	gp_widget_set_value(*widget, buf);
+	return GP_OK;
+}
+
+static int
 _get_Sony_ManualFocus(CONFIG_GET_ARGS) {
 	int val;
 
