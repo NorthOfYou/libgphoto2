@@ -6079,7 +6079,7 @@ _put_Sony_FocusMode(CONFIG_PUT_ARGS) {
 			break;
 		}
 	}
-	return GP_OK;
+	return PUT_OK;
 }
 
 
