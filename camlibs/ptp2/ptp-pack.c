@@ -1084,7 +1084,6 @@ ptp_unpack_Sony_DPD (PTPParams *params, unsigned char* data, PTPDevicePropDesc *
 				if (!ret) {
 					if (!i)
 						goto outofmemory;
-					dpd->FORM.Enum.NumberOfValues = i;
 					break;
 				}
 			}
@@ -1123,7 +1122,6 @@ ptp_unpack_Sony_DPD (PTPParams *params, unsigned char* data, PTPDevicePropDesc *
 		// 		if (!ret) {
 		// 			if (!i)
 		// 				goto outofmemory;
-		// 			dpd->FORM.Enum.NumberOfValues = i;
 		// 			break;
 		// 		}
 		// 	}
