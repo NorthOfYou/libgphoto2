@@ -4759,12 +4759,54 @@ ptp_generic_getdevicepropdesc (PTPParams *params, uint16_t propcode, PTPDevicePr
 	if (	(params->deviceinfo.VendorExtensionID == PTP_VENDOR_SONY) &&
 		ptp_operation_issupported(params, PTP_OC_SONY_GetAllDevicePropData)
 	) {
+		ptp_debug (params, "fetching alpha property descriptor for: 0x%04x\n", propcode);
 		CHECK_PTP_RC(ptp_sony_getalldevicepropdesc (params));
 
 		for (i=0;i<params->nrofdeviceproperties;i++)
 			if (params->deviceproperties[i].desc.DevicePropertyCode == propcode)
 				break;
 		if (i == params->nrofdeviceproperties) {
+			int mode_300 = has_sony_mode_300(params);
+			if (mode_300 && (propcode == PTP_DPC_SONY_NearFar)) {
+				dpd->DevicePropertyCode = PTP_DPC_SONY_NearFar;
+				dpd->DataType = PTP_DTC_INT16;
+				dpd->GetSet = 1;
+				dpd->CurrentValue.i16 = 0;
+				dpd->FactoryDefaultValue.i16 = 0;
+				dpd->FormFlag = PTP_DPFF_Range;
+				dpd->FORM.Range.MaximumValue.i16 = 7;
+				dpd->FORM.Range.MinimumValue.i16 = -7;
+				dpd->FORM.Range.StepSize.i16 = 1;
+				return PTP_RC_OK;
+			} 
+			if (mode_300 && (propcode == PTP_DPC_SONY_AutoFocus)) {
+				dpd->DevicePropertyCode = PTP_DPC_SONY_AutoFocus;
+				dpd->DataType = PTP_DTC_UINT16;
+				dpd->GetSet = 1;
+				dpd->CurrentValue.u16 = 0;
+				dpd->FactoryDefaultValue.u16 = 0;
+				dpd->FormFlag = PTP_DPFF_Enumeration;
+				dpd->FORM.Enum.NumberOfValues = 2;
+				dpd->FORM.Enum.SupportedValue = calloc (2 , sizeof(PTPPropertyValue));
+				dpd->FORM.Enum.SupportedValue[0].u16 = 1;
+				dpd->FORM.Enum.SupportedValue[1].u16 = 2;
+				return PTP_RC_OK;
+			}
+
+			if (mode_300 && (propcode == PTP_DPC_SONY_AF_Area_Position)) {
+				dpd->DevicePropertyCode = PTP_DPC_SONY_AF_Area_Position;
+				dpd->DataType = PTP_DTC_UINT32;
+				dpd->GetSet = 1;
+				dpd->CurrentValue.u32 = 0;
+				dpd->FactoryDefaultValue.u32 = 0;
+				dpd->FormFlag = PTP_DPFF_Range;
+				dpd->FORM.Range.MaximumValue.u32 = 0xFFFFFFFF;
+				dpd->FORM.Range.MinimumValue.u32 = 0;
+				dpd->FORM.Range.StepSize.u32 = 1;
+				return PTP_RC_OK;
+			}
+
+
 			ptp_debug (params, "alpha property 0x%04x not found?\n", propcode);
 			return PTP_RC_GeneralError;
 		}
