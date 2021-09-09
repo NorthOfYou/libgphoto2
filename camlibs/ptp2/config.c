@@ -10288,7 +10288,7 @@ static struct submenu camera_settings_menu[] = {
 	{ N_("Menus and Playback"),     "menusandplayback",     PTP_DPC_NIKON_MenusAndPlayback,     PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_MenusAndPlayback,    _put_Nikon_MenusAndPlayback },
 	{ N_("External Recording Control"),     "externalrecordingcontrol", PTP_DPC_NIKON_ExternalRecordingControl,     PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OffOn_UINT8,    _put_Nikon_OffOn_UINT8 },
 	{ N_("Camera Action"),          "cameraaction", 	0xd208, 			    PTP_VENDOR_FUJI,	PTP_DTC_UINT16,	_get_Fuji_Action,		_put_Fuji_Action },
-	{ N_("Priority Mode"),		"prioritymode",		PTP_DPC_SONY_PriorityMode,  	    PTP_VENDOR_SONY,	PTP_DTC_INT8, 	_get_Sony_PriorityMode,     	_put_Sony_PriorityMode },
+	{ N_("Priority Mode"),		"prioritymode",		PTP_DPC_SONY_PriorityMode,  	    PTP_VENDOR_SONY,	PTP_DTC_UINT8, 	_get_Sony_PriorityMode,     	_put_Sony_PriorityMode },
 	{ N_("Priority Mode"),          "prioritymode",         PTP_DPC_FUJI_PriorityMode,          PTP_VENDOR_FUJI,    PTP_DTC_UINT16, _get_Fuji_PriorityMode,         _put_Fuji_PriorityMode },
 
 /* virtual */

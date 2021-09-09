@@ -743,8 +743,8 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 			free (xprops);
 			C_PTP (ptp_sony_sdioconnect (&camera->pl->params, 3, 0, 0));
 
-			propval.i8 = 1; /* application */
-			LOG_ON_PTP_E (ptp_sony_setdevicecontrolvaluea (params, PTP_DPC_SONY_PriorityMode, &propval, PTP_DTC_INT8));
+			propval.u8 = 1; /* application */
+			LOG_ON_PTP_E (ptp_sony_setdevicecontrolvaluea (params, PTP_DPC_SONY_PriorityMode, &propval, PTP_DTC_UINT8));
 
 			/* remember for sony zv-1 hack */
 			params->starttime = time_now();
