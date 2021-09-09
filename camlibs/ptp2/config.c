@@ -10298,7 +10298,7 @@ static struct submenu camera_settings_menu[] = {
 	{ N_("Autofocus"),		"autofocus",    0,  PTP_VENDOR_NIKON,   0,  _get_Autofocus,         _put_Autofocus },
 	{ N_("Capture Target"),		"capturetarget",0,  PTP_VENDOR_CANON,   0,  _get_CaptureTarget,     _put_CaptureTarget },
 	{ N_("Capture Target"),		"capturetarget",0,  PTP_VENDOR_PANASONIC,0, _get_CaptureTarget,     _put_CaptureTarget },
-	{ N_("Capture Target"),		"capturetarget",PTP_DPC_SONY_StillImageStoreDestination,  PTP_VENDOR_SONY,0, _get_Sony_CaptureTarget,     _put_Sony_CaptureTarget },
+	{ N_("Capture Target"),		"capturetarget",PTP_DPC_SONY_StillImageStoreDestination,  PTP_VENDOR_SONY, PTP_DTC_UINT16, _get_Sony_CaptureTarget,     _put_Sony_CaptureTarget },
 	{ N_("CHDK"),     		"chdk",		PTP_OC_CHDK,  PTP_VENDOR_CANON,   0,  _get_CHDK,     _put_CHDK },
 	{ N_("Capture"),		"capture",	0,  PTP_VENDOR_CANON,   0,  _get_Canon_CaptureMode, _put_Canon_CaptureMode },
 	{ N_("AF Method"),						  "afmethod", PTP_DPC_CANON_EOS_LvAfSystem,  PTP_VENDOR_CANON,   PTP_DTC_UINT32,  _get_Canon_EOS_AFMethod,     _put_Canon_EOS_AFMethod },
