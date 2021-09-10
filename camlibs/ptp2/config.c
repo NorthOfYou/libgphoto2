@@ -7003,6 +7003,19 @@ static struct deviceproptableu8 sony_qx_compression[] = {
 };
 GENERIC8TABLE(Sony_QX_Compression,sony_qx_compression)
 
+static struct deviceproptableu8 sony_pc_save_image_size[] = {
+	{ N_("Original"), 0x01, 0 },
+	{ N_("2M"),       0x02, 0 },
+};
+GENERIC8TABLE(Sony_PcSaveImageSize, sony_pc_save_image_size)
+
+static struct deviceproptableu8 sony_pc_save_image_format[] = {
+	{ N_("RAW & JPEG"),   0x01, 0 },
+	{ N_("JPEG Only"),    0x02, 0 },
+	{ N_("RAW Only"),     0x03, 0 },
+};
+GENERIC8TABLE(Sony_PcSaveImageFormat, sony_pc_save_image_format)
+
 static struct deviceproptableu8 sony_sensorcrop[] = {
 	{ N_("Off"),	0x01, 0 },
 	{ N_("On"),	0x02, 0 },
@@ -10596,6 +10609,8 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("Image Quality"),                  "imagequality",             PTP_DPC_CompressionSetting,             PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_CompressionSetting,            _put_Sony_CompressionSetting },
 	{ N_("Image Quality"),                  "imagequality",             PTP_DPC_CompressionSetting,             0,                  PTP_DTC_UINT8,  _get_CompressionSetting,            _put_CompressionSetting },
 	{ N_("JPEG Quality"),                   "jpegquality",              PTP_DPC_SONY_JpegQuality,               PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_300_JpegCompressionSetting,   _put_Sony_300_JpegCompressionSetting },
+	{ N_("PC Save Image Size"),             "pcsaveimgsize",            PTP_DPC_SONY_PcSaveImageSize,           PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_PcSaveImageSize,          _put_Sony_PcSaveImageSize },
+	{ N_("PC Save Image Format"),             "pcsaveimgformat",        PTP_DPC_SONY_PcSaveImageFormat,         PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_PcSaveImageFormat,        _put_Sony_PcSaveImageFormat },
 	{ N_("Focus Distance"),                 "focusdistance",            PTP_DPC_FocusDistance,                  0,                  PTP_DTC_UINT16, _get_FocusDistance,                 _put_FocusDistance },
 	{ N_("Focal Length"),                   "focallength",              PTP_DPC_FocalLength,                    0,                  PTP_DTC_UINT32, _get_FocalLength,                   _put_FocalLength },
 	{ N_("Focus Mode"),                     "focusmode",                PTP_DPC_FocusMode,                      PTP_VENDOR_SONY,    PTP_DTC_UINT16, _get_FocusMode,                     _put_Sony_FocusMode },

@@ -3095,6 +3095,8 @@ typedef struct _PTPCanonEOSDeviceInfo {
 #define PTP_DPC_SONY_FocusArea 0xD22C
 #define PTP_DPC_SONY_JpegQuality            0xD252
 #define PTP_DPC_SONY_CompressionSetting         0xD253
+#define PTP_DPC_SONY_PcSaveImageSize            0xD268
+#define PTP_DPC_SONY_PcSaveImageFormat          0xD269
 #define PTP_DPC_SONY_ExposureCompensation		0xD224
 #define PTP_DPC_SONY_ISO2				0xD226
 #define PTP_DPC_SONY_ShutterSpeed2			0xD229
