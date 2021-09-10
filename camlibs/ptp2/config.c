@@ -3928,7 +3928,7 @@ _put_Sony_ExposureProgram(CONFIG_PUT_ARGS){
 
 	if( has_sony_mode_300(params) ) {
 		ret = _put_Sony_300_ExposureProgram(camera, widget, propval, dpd);
-		printf("propval->u32 = %08X\n", propval->u32);
+		//printf("propval->u32 = %08X\n", propval->u32);
 		if (ret == GP_OK) {
 			ret = translate_ptp_result (ptp_sony_setdevicecontrolvaluea (params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
 			if (ret == GP_OK) ret = PUT_OK;
