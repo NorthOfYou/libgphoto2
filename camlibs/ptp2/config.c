@@ -2476,6 +2476,8 @@ GENERIC8TABLE(Nikon1_ImageSize,nikon1_size)
 static struct deviceproptableu8 sony_aspectratio[] = {
 	{ N_("3:2"),		0x01, 0 },
 	{ N_("16:9"),		0x02, 0 },
+	{ N_("4:3"),		0x03, 0 },
+	{ N_("1:1"),		0x04, 0 },
 };
 GENERIC8TABLE(Sony_AspectRatio,sony_aspectratio)
 
