@@ -2368,11 +2368,11 @@ static struct deviceproptableu16 canon_shutterspeed[] = {
 	{ "20",		0x0015,0 },
 	{ "15",		0x0018,0 },
 	{ "13",		0x001b,0 },
-	{ "10",		0x001c,0 },
-	{ "10.3",	0x001d,0 }, /* 10.4 */
+	// { "10",		0x001c,0 },
+	{ "10",		0x001d,0 }, /* 10.4 */
 	{ "8",		0x0020,0 },
-	{ "6.3",	0x0023,0 }, /* + 1/3 */
-	{ "6",		0x0024,0 },
+	{ "6",		0x0023,0 }, /* + 1/3 */
+	// { "6",		0x0024,0 },
 	{ "5",		0x0025,0 },
 	{ "4",		0x0028,0 },
 	{ "3.2",	0x002b,0 },
@@ -3463,7 +3463,7 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 
 		return GP_OK;
 	}
-	
+
 	GPContext 		*context = ((PTPData *) params->data)->context;
 	PTPPropertyValue	moveval;
 
@@ -3905,7 +3905,7 @@ static struct deviceproptableu32 sony_300_exposure_program_modes[] = {
 	{ N_("S&Q (S)"),   0x0009805B, 0 },
 	{ N_("S&Q (M)"),   0x0009805C, 0 },
 	{ N_("Intelligent Auto"), 0x00048000, 0 },
-}; 
+};
 
 GENERIC32TABLE(Sony_300_ExposureProgram, sony_300_exposure_program_modes)
 
@@ -3913,7 +3913,7 @@ static int
 _get_Sony_ExposureProgram(CONFIG_GET_ARGS){
 	int ret;
 	PTPParams	*params = &(camera->pl->params);
-	
+
 
 	if( has_sony_mode_300(params) ) {
 		ret = _get_Sony_300_ExposureProgram(camera, widget, menu, dpd);
@@ -8864,7 +8864,7 @@ _put_Sony_AF_Area_Position(CONFIG_PUT_ARGS) {
 	int x,y;
 	uint8_t packed[4];
 	PTPParams *params = &(camera->pl->params);
-	
+
 	CR (gp_widget_get_value(widget, &val));
 
 	C_PARAMS (2 == sscanf(val, "%dx%d", &x, &y));
