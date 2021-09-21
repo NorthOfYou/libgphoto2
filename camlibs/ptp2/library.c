@@ -6046,7 +6046,7 @@ camera_trigger_canon_eos_capture (Camera *camera, GPContext *context)
 
 			// printf("canon remote release trigger\n");
 
-			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseon (params, 3, 0), _("Canon EOS Full-Press failed"));
+			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseon (params, 3, 1), _("Canon EOS Full-Press failed"));
 			// printf("canon Full Press Success\n");
 			/* no event check between */
 			/* full release now */
