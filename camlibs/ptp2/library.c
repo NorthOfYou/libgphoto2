@@ -3805,10 +3805,23 @@ enable_liveview:
 			return GP_ERROR;
 		}
 		gp_file_append (file, (char*)jpgStartPtr, jpgEndPtr-jpgStartPtr);
+
+		// Grab focus point coords from ximage header
+		int x_coord_offset = 0x445;
+		int y_coord_offset = 0x449;
+		u_int32_t x_coord, y_coord;
+		x_coord = ximage[x_coord_offset] | (ximage[x_coord_offset+1] << 8) | (ximage[x_coord_offset+2] << 16) | (ximage[x_coord_offset+3] << 24);
+		y_coord = ximage[y_coord_offset] | (ximage[y_coord_offset+1] << 8) | (ximage[y_coord_offset+2] << 16) | (ximage[y_coord_offset+3] << 24);
+
 		free (ximage); /* FIXME: perhaps handle the 128 byte header data too. */
 
 		gp_file_set_mime_type (file, GP_MIME_JPEG);
-		gp_file_set_name (file, "sony_preview.jpg");
+		size_t needed = snprintf(NULL, 0, "sony_preview;x=%d;y=%d.jpg", x_coord, y_coord) + 1;
+		char  *buffer = malloc(needed);
+		sprintf(buffer, "sony_preview;x=%d;y=%d.jpg", x_coord, y_coord);
+		buffer[needed - 1] = 0;
+		gp_file_set_name (file, buffer);
+		free(buffer);
 		gp_file_set_mtime (file, time(NULL));
 
 		SET_CONTEXT_P(params, NULL);
