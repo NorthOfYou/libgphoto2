@@ -4296,6 +4296,71 @@ static struct deviceproptableu16 capture_mode[] = {
 };
 GENERIC16TABLE(CaptureMode,capture_mode)
 
+static struct deviceproptableu32 sony_300_capture_mode[] = {
+	{ N_("Single Shot"),		      0x00000001, 0 },
+	{ N_("Continuous Low Speed"),     0x00018012, 0},
+	{ N_("Continuous Mid Speed"),     0x00018015, 0},
+	{ N_("Continuous Hi Speed"),      0x00010002, 0},
+	{ N_("Continuous Hi+ Speed"),     0x00018010, 0},
+	{ N_("Selftimer 10s"),            0x00038004, 0},
+	{ N_("Selftimer 5s"),             0x00038003, 0},
+	{ N_("Selftimer 2s"),             0x00038005, 0},
+	{ N_("Selftimer 10s 3 Pictures"), 0x00088008, 0},
+	{ N_("Selftimer 10s 5 Pictures"), 0x00088009, 0},
+	{ N_("Selftimer 5s 3 Pictures"),  0x0008800c, 0},
+	{ N_("Selftimer 5s 5 Pictures"),  0x0008800d, 0},
+	{ N_("Selftimer 2s 3 Pictures"),  0x0008800e, 0},
+	{ N_("Selftimer 2s 5 Pictures"),  0x0008800f, 0},
+	{ N_("Bracketing C 0.3 Steps 3 Pictures"),  0x00048337, 0 },
+	{ N_("Bracketing C 0.3 Steps 5 Pictures"),	0x00048537, 0},
+	{ N_("Bracketing C 0.3 Steps 9 Pictures"),	0x00048937, 0},
+
+	{ N_("Bracketing C 0.5 Steps 3 Pictures"),	0x00048357, 0},
+	{ N_("Bracketing C 0.5 Steps 5 Pictures"),	0x00048557, 0},
+	{ N_("Bracketing C 0.5 Steps 9 Pictures"),	0x00048957, 0},
+
+	{ N_("Bracketing C 0.7 Steps 3 Pictures"),	0x00048377, 0},
+	{ N_("Bracketing C 0.7 Steps 5 Pictures"),	0x00048577, 0},
+	{ N_("Bracketing C 0.7 Steps 9 Pictures"),	0x00048977, 0},
+
+	{ N_("Bracketing C 1.0 Steps 3 Pictures"),	0x00048311, 0},
+	{ N_("Bracketing C 1.0 Steps 5 Pictures"),	0x00048511, 0},
+	{ N_("Bracketing C 1.0 Steps 9 Pictures"),	0x00048911, 0},
+
+	{ N_("Bracketing C 2.0 Steps 3 Pictures"),	0x00048321, 0},
+	{ N_("Bracketing C 2.0 Steps 5 Pictures"),	0x00048521, 0},
+
+	{ N_("Bracketing C 3.0 Steps 3 Pictures"),	0x00048331, 0},
+	{ N_("Bracketing C 3.0 Steps 5 Pictures"),	0x00048531, 0},
+
+	{ N_("Bracketing S 0.3 Steps 3 Pictures"),	0x00058336, 0},
+	{ N_("Bracketing S 0.3 Steps 5 Pictures"),	0x00058536, 0},
+	{ N_("Bracketing S 0.3 Steps 9 Pictures"),	0x00058936, 0},
+
+	{ N_("Bracketing S 0.5 Steps 3 Pictures"),	0x00058356, 0},
+	{ N_("Bracketing S 0.5 Steps 5 Pictures"),	0x00058556, 0},
+	{ N_("Bracketing S 0.5 Steps 9 Pictures"),	0x00058956, 0},
+
+	{ N_("Bracketing S 0.7 Steps 3 Pictures"),	0x00058376, 0},
+	{ N_("Bracketing S 0.7 Steps 5 Pictures"),	0x00058576, 0},
+	{ N_("Bracketing S 0.7 Steps 9 Pictures"),	0x00058976, 0},
+
+	{ N_("Bracketing S 1.0 Steps 3 Pictures"),	0x00058310, 0},
+	{ N_("Bracketing S 1.0 Steps 5 Pictures"),	0x00058510, 0},
+	{ N_("Bracketing S 1.0 Steps 9 Pictures"),	0x00058910, 0},
+
+	{ N_("Bracketing S 2.0 Steps 3 Pictures"),	0x00058320, 0},
+	{ N_("Bracketing S 2.0 Steps 5 Pictures"),	0x00058520, 0},
+	{ N_("Bracketing S 3.0 Steps 3 Pictures"),	0x00058330, 0},
+	{ N_("Bracketing S 3.0 Steps 5 Pictures"),	0x00058530, 0},
+	{ N_("Bracketing WB Lo"),	0x00068018, 0},
+	{ N_("Bracketing DRO Lo"),	0x00078019, 0},
+	{ N_("Bracketing WB Hi"),	0x00068028, 0},
+	{ N_("Bracketing DRO Hi"),	0x00078029, 0},
+};
+
+GENERIC32TABLE(Sony_300_CaptureMode,sony_300_capture_mode)
+
 static struct deviceproptableu16 focus_metering[] = {
 	{ N_("Centre-spot"),	0x0001, 0 },
 	{ N_("Multi-spot"),	0x0002, 0 },
@@ -10636,6 +10701,7 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("HDR Mode"),                       "hdrmode",                  PTP_DPC_NIKON_HDRMode,                  PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("HDR High Dynamic"),               "hdrhighdynamic",           PTP_DPC_NIKON_HDRHighDynamic,           PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_HDRHighDynamic,          _put_Nikon_HDRHighDynamic },
 	{ N_("HDR Smoothing"),                  "hdrsmoothing",             PTP_DPC_NIKON_HDRSmoothing,             PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_HDRSmoothing,            _put_Nikon_HDRSmoothing },
+	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_StillCaptureMode,               PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_300_CaptureMode,          _put_Sony_300_CaptureMode },
 	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_StillCaptureMode,               0,                  PTP_DTC_UINT16, _get_CaptureMode,                   _put_CaptureMode },
 	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_FUJI_ReleaseMode,               PTP_VENDOR_FUJI,    PTP_DTC_UINT16, _get_Fuji_ReleaseMode,              _put_Fuji_ReleaseMode },
 	{ N_("Canon Shooting Mode"),            "shootingmode",             PTP_DPC_CANON_ShootingMode,             PTP_VENDOR_CANON,   PTP_DTC_UINT8,  _get_Canon_ShootMode,               _put_Canon_ShootMode },
