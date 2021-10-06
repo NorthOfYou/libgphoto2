@@ -2998,7 +2998,7 @@ static void _stringify_Sony_ISO(uint32_t raw_iso, char *buf) {
 	if (noise_reduction) {
 		buf_pos += sprintf(buf_pos, " ");
 		buf_pos += sprintf(buf_pos,_("Multi Frame Noise Reduction"));
-		if (noise_reduction == 2) {
+		if (noise_reduction == 0x10) {
 			// Distinguish Standard vs High modes for MFNR.
 			buf_pos += sprintf(buf_pos,"+");
 		}
@@ -3036,11 +3036,11 @@ static int _parse_Sony_ISO(const char *buf, uint32_t *raw_iso) {
 		return GP_ERROR_BAD_PARAMETERS;
 	buf += len;
 
-	uint8_t noise_reduction = 1;
+	uint8_t noise_reduction = 0x01;
 
 	if (*buf == '+') {
 		// If there's a `+`, it's a High mode for MFNR.
-		noise_reduction = 2;
+		noise_reduction = 0x10;
 		buf++;
 	}
 
