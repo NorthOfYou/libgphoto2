@@ -3809,16 +3809,24 @@ enable_liveview:
 		// Grab focus point coords from ximage header
 		int x_coord_offset = 0x445;
 		int y_coord_offset = 0x449;
-		u_int32_t x_coord, y_coord;
+		int af_height_offset = 0x44d;
+		int af_width_offset = 0x451;
+		int lv_width_offset = 0x0475;
+		int lv_height_offset = 0x0479;
+		u_int32_t x_coord, y_coord, af_height, af_width, lv_width, lv_height;
 		x_coord = ximage[x_coord_offset] | (ximage[x_coord_offset+1] << 8) | (ximage[x_coord_offset+2] << 16) | (ximage[x_coord_offset+3] << 24);
 		y_coord = ximage[y_coord_offset] | (ximage[y_coord_offset+1] << 8) | (ximage[y_coord_offset+2] << 16) | (ximage[y_coord_offset+3] << 24);
+		af_height = ximage[af_height_offset] | (ximage[af_height_offset+1] << 8) | (ximage[af_height_offset+2] << 16) | (ximage[af_height_offset+3] << 24);
+		af_width = ximage[af_width_offset] | (ximage[af_width_offset+1] << 8) | (ximage[af_width_offset+2] << 16) | (ximage[af_width_offset+3] << 24);
+		lv_width = ximage[lv_width_offset] | (ximage[lv_width_offset+1] << 8) | (ximage[lv_width_offset+2] << 16) | (ximage[lv_width_offset+3] << 24);
+		lv_height = ximage[lv_height_offset] | (ximage[lv_height_offset+1] << 8) | (ximage[lv_height_offset+2] << 16) | (ximage[lv_height_offset+3] << 24);
 
 		free (ximage); /* FIXME: perhaps handle the 128 byte header data too. */
 
 		gp_file_set_mime_type (file, GP_MIME_JPEG);
-		size_t needed = snprintf(NULL, 0, "sony_preview;x=%d;y=%d.jpg", x_coord, y_coord) + 1;
+		size_t needed = snprintf(NULL, 0, "sony_preview;x=%d;y=%d;af_w=%d;af_h=%d;lv_w=%d;lv_h=%d.jpg", x_coord, y_coord, af_width, af_height, lv_width, lv_height) + 1;
 		char  *buffer = malloc(needed);
-		sprintf(buffer, "sony_preview;x=%d;y=%d.jpg", x_coord, y_coord);
+		sprintf(buffer, "sony_preview;x=%d;y=%d;af_w=%d;af_h=%d;lv_w=%d;lv_h=%d.jpg", x_coord, y_coord, af_width, af_height, lv_width, lv_height);
 		buffer[needed - 1] = 0;
 		gp_file_set_name (file, buffer);
 		free(buffer);
