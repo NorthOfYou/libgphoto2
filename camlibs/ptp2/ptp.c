@@ -4792,6 +4792,19 @@ ptp_generic_getdevicepropdesc (PTPParams *params, uint16_t propcode, PTPDevicePr
 				dpd->FORM.Enum.SupportedValue[1].u16 = 2;
 				return PTP_RC_OK;
 			}
+			if (mode_300 && (propcode == PTP_DPC_SONY_Capture)) {
+				dpd->DevicePropertyCode = PTP_DPC_SONY_Capture;
+				dpd->DataType = PTP_DTC_UINT16;
+				dpd->GetSet = 1;
+				dpd->CurrentValue.u16 = 0;
+				dpd->FactoryDefaultValue.u16 = 0;
+				dpd->FormFlag = PTP_DPFF_Enumeration;
+				dpd->FORM.Enum.NumberOfValues = 2;
+				dpd->FORM.Enum.SupportedValue = calloc (2 , sizeof(PTPPropertyValue));
+				dpd->FORM.Enum.SupportedValue[0].u16 = 1;
+				dpd->FORM.Enum.SupportedValue[1].u16 = 2;
+				return PTP_RC_OK;
+			}
 
 			if (mode_300 && (propcode == PTP_DPC_SONY_AF_Area_Position)) {
 				dpd->DevicePropertyCode = PTP_DPC_SONY_AF_Area_Position;
