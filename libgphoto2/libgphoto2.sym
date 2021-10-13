@@ -95,6 +95,7 @@ gp_file_set_mime_type
 gp_file_set_mtime
 gp_file_set_name
 gp_filesystem_append
+gp_filesystem_append_fast
 gp_filesystem_count
 gp_filesystem_delete_all
 gp_filesystem_delete_file

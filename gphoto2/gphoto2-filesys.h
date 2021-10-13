@@ -142,6 +142,7 @@ typedef struct _CameraFileInfo {
 	CameraFileInfoPreview preview;
 	CameraFileInfoFile    file;
 	CameraFileInfoAudio   audio;
+	uint32_t ptp_object_handle;
 } CameraFileInfo;
 
 /**
@@ -238,6 +239,8 @@ int gp_filesystem_free	 (CameraFilesystem *fs);
 
 /* Manual editing */
 int gp_filesystem_append           (CameraFilesystem *fs, const char *folder,
+			            const char *filename, GPContext *context);
+int gp_filesystem_append_fast      (CameraFilesystem *fs, const char *folder,
 			            const char *filename, GPContext *context);
 int gp_filesystem_set_info_noop    (CameraFilesystem *fs,
 				    const char *folder, const char *filename,

@@ -442,23 +442,23 @@ lookup_folder_file (
 	xf = lookup_folder (fs, fs->rootfolder, folder, context);
 	if (!xf) return GP_ERROR_DIRECTORY_NOT_FOUND;
 	/* Check if we need to load the filelist of the folder ... */
-	if (xf->files_dirty) {
-		CameraList	*list;
-		int		ret;
-		/*
-                 * The folder is dirty. List the files in it to make it clean.
-		 */
-		GP_LOG_D ("Folder %s is dirty. "
-			"Listing files in there to make folder clean...", folder);
-		ret = gp_list_new (&list);
-		if (ret == GP_OK) {
-			ret = gp_filesystem_list_files (fs, folder, list, context);
-			gp_list_free (list);
-			GP_LOG_D ("Done making folder %s clean...", folder);
-		}
-		if (ret != GP_OK)
-			GP_LOG_D ("Making folder %s clean failed: %d", folder, ret);
-	}
+	// if (xf->files_dirty) {
+	// 	CameraList	*list;
+	// 	int		ret;
+	// 	/*
+    //              * The folder is dirty. List the files in it to make it clean.
+	// 	 */
+	// 	GP_LOG_D ("Folder %s is dirty. "
+	// 		"Listing files in there to make folder clean...", folder);
+	// 	ret = gp_list_new (&list);
+	// 	if (ret == GP_OK) {
+	// 		ret = gp_filesystem_list_files (fs, folder, list, context);
+	// 		gp_list_free (list);
+	// 		GP_LOG_D ("Done making folder %s clean...", folder);
+	// 	}
+	// 	if (ret != GP_OK)
+	// 		GP_LOG_D ("Making folder %s clean failed: %d", folder, ret);
+	// }
 
 	f = xf->files;
 	while (f) {
@@ -769,6 +769,38 @@ gp_filesystem_append (CameraFilesystem *fs, const char *folder,
 		gp_list_free (xlist);
 		if (ret != GP_OK) return ret;
 	}
+	ret = internal_append (fs, f, filename, context);
+	if (ret == GP_ERROR_FILE_EXISTS) /* not an error here ... just in case we add files twice to the list */
+		ret = GP_OK;
+	return ret;
+}
+
+int
+gp_filesystem_append_fast (CameraFilesystem *fs, const char *folder,
+                            const char *filename, GPContext *context)
+{
+	CameraFilesystemFolder *f;
+	int ret;
+
+	C_PARAMS (fs && folder);
+	CC (context);
+	CA (folder, context);
+
+	GP_LOG_D ("Append %s/%s to filesystem", folder, filename);
+	/* Check folder for existence, if not, create it. */
+	f = lookup_folder (fs, fs->rootfolder, folder, context);
+	if (!f)
+		CR (append_folder (fs, folder, &f, context));
+	// if (f->files_dirty) { /* Need to load folder from driver first ... capture case */
+	// 	CameraList	*xlist;
+	// 	int ret;
+
+	// 	ret = gp_list_new (&xlist);
+	// 	if (ret != GP_OK) return ret;
+	// 	ret = gp_filesystem_list_files (fs, folder, xlist, context);
+	// 	gp_list_free (xlist);
+	// 	if (ret != GP_OK) return ret;
+	// }
 	ret = internal_append (fs, f, filename, context);
 	if (ret == GP_ERROR_FILE_EXISTS) /* not an error here ... just in case we add files twice to the list */
 		ret = GP_OK;
