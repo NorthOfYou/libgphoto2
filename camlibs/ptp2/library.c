@@ -4431,6 +4431,7 @@ capturetriggered:
 				}
 			}
 		} else { /* capture to card branch */
+			GP_LOG_D("nikon capture; capture to card branch");
 			CR (add_object (camera, newobject, context));
 			strcpy  (path->name,  oi.Filename);
 			sprintf (path->folder,"/"STORAGE_FOLDER_PREFIX"%08lx/",(unsigned long)oi.StorageID);
@@ -4438,10 +4439,19 @@ capturetriggered:
 			/* delete last / or we get confused later. */
 			path->folder[ strlen(path->folder)-1 ] = '\0';
 
-			ptp_free_objectinfo(&oi);
+			ret = gp_filesystem_append_fast (camera->fs, path->folder, path->name, context);
+			if (ret != GP_OK) {
+				GP_LOG_E ("failed to add path to filesystem\n");
+				return ret;
+			}
 
-			/* not doing the rest of the burst loop ... */
-			return gp_filesystem_append (camera->fs, path->folder, path->name, context);
+			ret = add_objectid_and_info(camera, path, context, newobject, &oi);
+			ptp_free_objectinfo(&oi);
+			if (ret != GP_OK) {
+				GP_LOG_E ("failed to add objectid and info\n");
+				return ret;
+			}
+			
 		}
 	}
 	ptp_check_event (params);
