@@ -4083,6 +4083,35 @@ get_folder_from_handle (Camera *camera, uint32_t storage, uint32_t handle, char 
 	return (GP_OK);
 }
 
+static int 
+add_objectid_and_info (Camera* camera, CameraFilePath *path, GPContext *context,
+	uint32_t newobject, PTPObjectInfo *oi) {
+
+	PTPParams			*params = &camera->pl->params;
+	CameraFileInfo		info;
+
+	
+	info.ptp_object_handle = newobject;
+	info.file.fields = GP_FILE_INFO_TYPE |
+			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
+			GP_FILE_INFO_SIZE | GP_FILE_INFO_MTIME;
+	strcpy_mime (info.file.type, params->deviceinfo.VendorExtensionID, oi->ObjectFormat);
+	info.file.width		= oi->ImagePixWidth;
+	info.file.height	= oi->ImagePixHeight;
+	info.file.size		= oi->ObjectCompressedSize;
+	info.file.mtime		= time(NULL);
+
+	info.preview.fields = GP_FILE_INFO_TYPE |
+			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
+			GP_FILE_INFO_SIZE;
+	strcpy_mime (info.preview.type, params->deviceinfo.VendorExtensionID, oi->ThumbFormat);
+	info.preview.width	= oi->ThumbPixWidth;
+	info.preview.height	= oi->ThumbPixHeight;
+	info.preview.size	= oi->ThumbCompressedSize;
+	GP_LOG_D ("setting fileinfo in fs");
+	return gp_filesystem_set_info_noop(camera->fs, path->folder, path->name, info, context);
+}
+
 static int
 add_objectid_and_upload (Camera *camera, CameraFilePath *path, GPContext *context,
 	uint32_t newobject, PTPObjectInfo *oi) {
@@ -4090,7 +4119,6 @@ add_objectid_and_upload (Camera *camera, CameraFilePath *path, GPContext *contex
 	PTPParams		*params = &camera->pl->params;
 	CameraFile		*file = NULL;
 	unsigned char		*ximage = NULL;
-	CameraFileInfo		info;
 
 	ret = gp_file_new(&file);
 	if (ret!=GP_OK) return ret;
@@ -4121,24 +4149,7 @@ add_objectid_and_upload (Camera *camera, CameraFilePath *path, GPContext *contex
 	gp_file_unref (file);
 
 	/* we also get the fs info for free, so just set it */
-	info.file.fields = GP_FILE_INFO_TYPE |
-			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
-			GP_FILE_INFO_SIZE | GP_FILE_INFO_MTIME;
-	strcpy_mime (info.file.type, params->deviceinfo.VendorExtensionID, oi->ObjectFormat);
-	info.file.width		= oi->ImagePixWidth;
-	info.file.height	= oi->ImagePixHeight;
-	info.file.size		= oi->ObjectCompressedSize;
-	info.file.mtime		= time(NULL);
-
-	info.preview.fields = GP_FILE_INFO_TYPE |
-			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
-			GP_FILE_INFO_SIZE;
-	strcpy_mime (info.preview.type, params->deviceinfo.VendorExtensionID, oi->ThumbFormat);
-	info.preview.width	= oi->ThumbPixWidth;
-	info.preview.height	= oi->ThumbPixHeight;
-	info.preview.size	= oi->ThumbCompressedSize;
-	GP_LOG_D ("setting fileinfo in fs");
-	return gp_filesystem_set_info_noop(camera->fs, path->folder, path->name, info, context);
+	return add_objectid_and_info(camera, path, context, newobject, oi);
 }
 
 /**
