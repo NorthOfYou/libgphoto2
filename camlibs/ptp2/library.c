@@ -7127,8 +7127,9 @@ camera_wait_for_event (Camera *camera, int timeout,
 						/* if this was the last current event ... stop and return the folder add */
 						return GP_OK;
 					} else {
-						CR (gp_filesystem_append (camera->fs, path->folder,
+						CR (gp_filesystem_append_fast (camera->fs, path->folder,
 						path->name, context));
+						CR (add_objectid_and_info(camera, path, context, ob->oid, &ob->oi));
 						*eventtype = GP_EVENT_FILE_ADDED;
 						*eventdata = path;
 						return GP_OK;
@@ -7168,7 +7169,7 @@ downloadnow:
 						return ret;
 					}
 					ptp_free_objectinfo (&oi);
-					ret = gp_filesystem_append(camera->fs, path->folder, path->name, context);
+					ret = gp_filesystem_append_fast(camera->fs, path->folder, path->name, context);
 					if (ret != GP_OK) {
 						gp_file_free (file);
 						return ret;
