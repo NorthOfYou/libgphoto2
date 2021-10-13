@@ -9018,6 +9018,7 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	uint32_t storage;
 	PTPObject *ob;
 	PTPParams *params = &camera->pl->params;
+	CameraFileInfo info;
 
 	SET_CONTEXT_P(params, context);
 
@@ -9038,15 +9039,48 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 		return (GP_ERROR_BAD_PARAMETERS); /* file not found */
 	}
 
-	/* compute storage ID value from folder patch */
-	folder_to_storage(folder,storage);
-	/* Get file number omitting storage pseudofolder */
-	find_folder_handle(params, folder, storage, oid);
-	oid = find_child(params, filename, storage, oid, &ob);
+	gp_filesystem_get_info(fs, folder, filename, &info, context);
+	oid = info.ptp_object_handle;
+
+	if (oid) {
+		int ret = ptp_object_want (params, oid, PTPOBJECT_OBJECTINFO_LOADED, &ob);
+		if (ret != PTP_RC_OK) {
+			oid = PTP_HANDLER_SPECIAL;
+		}
+	}
+	else {
+		/* compute storage ID value from folder patch */
+		folder_to_storage(folder,storage);
+		/* Get file number omitting storage pseudofolder */
+		find_folder_handle(params, folder, storage, oid);
+		oid = find_child(params, filename, storage, oid, &ob);
+	}
+
 	if (oid == PTP_HANDLER_SPECIAL) {
 		gp_context_error (context, _("File '%s/%s' does not exist."), folder, filename);
 		return GP_ERROR_BAD_PARAMETERS;
 	}
+
+	info.ptp_object_handle = oid;
+	info.file.fields = GP_FILE_INFO_TYPE |
+			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
+			GP_FILE_INFO_SIZE | GP_FILE_INFO_MTIME;
+	strcpy_mime (info.file.type, params->deviceinfo.VendorExtensionID, ob->oi.ObjectFormat);
+	info.file.width		= ob->oi.ImagePixWidth;
+	info.file.height	= ob->oi.ImagePixHeight;
+	info.file.size		= ob->oi.ObjectCompressedSize;
+	info.file.mtime     = ob->oi.ModificationDate;
+
+	info.preview.fields = GP_FILE_INFO_TYPE |
+			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
+			GP_FILE_INFO_SIZE;
+	strcpy_mime (info.preview.type, params->deviceinfo.VendorExtensionID, ob->oi.ThumbFormat);
+	info.preview.width	= ob->oi.ThumbPixWidth;
+	info.preview.height	= ob->oi.ThumbPixHeight;
+	info.preview.size	= ob->oi.ThumbCompressedSize;
+
+	gp_filesystem_set_info_noop(fs, folder, filename, info, context);
+	
 	if (ob->oi.ModificationDate != 0)
 		gp_file_set_mtime (file, ob->oi.ModificationDate);
 	else
@@ -9552,13 +9586,24 @@ get_info_func (CameraFilesystem *fs, const char *folder, const char *filename,
 
 	C_PARAMS (strcmp (folder, "/special"));
 
-	/* compute storage ID value from folder patch */
-	folder_to_storage(folder,storage);
-	/* Get file number omitting storage pseudofolder */
-	find_folder_handle(params, folder, storage, oid);
-	oid = find_child(params, filename, storage, oid, &ob);
+	if (info->ptp_object_handle) {
+		oid = info->ptp_object_handle;
+		int ret = ptp_object_want (params, oid, PTPOBJECT_OBJECTINFO_LOADED, &ob);
+		if (ret != PTP_RC_OK) {
+			oid = PTP_HANDLER_SPECIAL;
+		}
+	} 
+	else {
+		/* compute storage ID value from folder patch */
+		folder_to_storage(folder,storage);
+		/* Get file number omitting storage pseudofolder */
+		find_folder_handle(params, folder, storage, oid);
+		oid = find_child(params, filename, storage, oid, &ob);
+	}
 	if (oid == PTP_HANDLER_SPECIAL)
 		return GP_ERROR;
+
+	info->ptp_object_handle = oid;
 
 	info->file.fields = GP_FILE_INFO_SIZE|GP_FILE_INFO_TYPE|GP_FILE_INFO_MTIME;
 	info->file.size   = ob->oi.ObjectCompressedSize;
