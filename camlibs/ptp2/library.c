@@ -3815,9 +3815,10 @@ enable_liveview:
 		int af_width_offset = 0x451;
 		int lv_width_offset = 0x0475;
 		int lv_height_offset = 0x0479;
-		u_int32_t x_coord, y_coord, af_height, af_width, lv_width, lv_height;
-		x_coord = ximage[x_coord_offset] | (ximage[x_coord_offset+1] << 8) | (ximage[x_coord_offset+2] << 16) | (ximage[x_coord_offset+3] << 24);
-		y_coord = ximage[y_coord_offset] | (ximage[y_coord_offset+1] << 8) | (ximage[y_coord_offset+2] << 16) | (ximage[y_coord_offset+3] << 24);
+                u_int16_t x_coord, y_coord;
+		u_int32_t af_height, af_width, lv_width, lv_height;
+		x_coord = ximage[x_coord_offset] | (ximage[x_coord_offset+1] << 8);
+		y_coord = ximage[y_coord_offset] | (ximage[y_coord_offset+1] << 8);
 		af_height = ximage[af_height_offset] | (ximage[af_height_offset+1] << 8) | (ximage[af_height_offset+2] << 16) | (ximage[af_height_offset+3] << 24);
 		af_width = ximage[af_width_offset] | (ximage[af_width_offset+1] << 8) | (ximage[af_width_offset+2] << 16) | (ximage[af_width_offset+3] << 24);
 		lv_width = ximage[lv_width_offset] | (ximage[lv_width_offset+1] << 8) | (ximage[lv_width_offset+2] << 16) | (ximage[lv_width_offset+3] << 24);
