@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <sys/time.h>
+#include <regex.h>
 #if defined(HAVE_ICONV) && defined(HAVE_LANGINFO_H)
 #include <langinfo.h>
 #endif
@@ -4433,7 +4434,8 @@ capturetriggered:
 		} else { /* capture to card branch */
 			GP_LOG_D("nikon capture; capture to card branch");
 			CR (add_object (camera, newobject, context));
-			strcpy  (path->name,  oi.Filename);
+			//strcpy  (path->name,  oi.Filename);
+			sprintf (path->name, "%s?object_id=%d", oi.Filename, newobject);
 			sprintf (path->folder,"/"STORAGE_FOLDER_PREFIX"%08lx/",(unsigned long)oi.StorageID);
 			get_folder_from_handle (camera, oi.StorageID, oi.ParentObject, path->folder);
 			/* delete last / or we get confused later. */
@@ -7113,7 +7115,8 @@ camera_wait_for_event (Camera *camera, int timeout,
 						strcpy (path->folder,"/");
 						goto downloadnow;
 					} else {
-						strcpy  (path->name,  ob->oi.Filename);
+						//strcpy  (path->name,  ob->oi.Filename);
+						sprintf (path->name, "%s?object_id=%d", ob->oi.Filename, ob->oid);
 						sprintf (path->folder,"/"STORAGE_FOLDER_PREFIX"%08lx/",(unsigned long)ob->oi.StorageID);
 						get_folder_from_handle (camera, ob->oi.StorageID, ob->oi.ParentObject, path->folder);
 						path->folder[ strlen(path->folder)-1 ] = '\0';
@@ -8892,6 +8895,31 @@ ptp_exit_camerafile_handler (PTPDataHandler *handler) {
 	return PTP_RC_OK;
 }
 
+static int
+parse_filename_object_handle (const char *filename, uint32_t *object_handle) {
+	int res = 0;
+	const char* pattern = "^[^?]+\\?object_id=([0-9]+)$";
+	regex_t regex;
+	regmatch_t pmatch[10];
+	char *stopstring;
+	
+	res = regcomp(&regex, pattern, REG_EXTENDED);
+	if (res != 0) {
+		return res;
+	}
+	
+	res = regexec(&regex, filename, 10, pmatch, 0);
+	if (res != 0) {
+		regfree(&regex);
+		return res;
+	}
+
+	*object_handle = strtoul(filename+pmatch[1].rm_so, &stopstring, 10);
+
+	regfree(&regex);
+	return res;
+}
+
 
 static int
 read_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
@@ -9060,17 +9088,27 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 				return special_files[i].getfunc (fs, folder, filename, type, file, data, context);
 		return (GP_ERROR_BAD_PARAMETERS); /* file not found */
 	}
-
-	gp_filesystem_get_info(fs, folder, filename, &info, context);
-	oid = info.ptp_object_handle;
+	GP_LOG_D ("parsing filename for oid: %s", filename);
+	if((parse_filename_object_handle(filename, &oid)) != 0){
+		oid = 0;
+	}
+	if (oid == 0) {
+		GP_LOG_D ("looking up oid in filesystem info");
+		gp_filesystem_get_info(fs, folder, filename, &info, context);
+		oid = info.ptp_object_handle;
+	} else {
+		GP_LOG_D ("Found oid in filename: %d", oid);
+	}
 
 	if (oid) {
+		GP_LOG_D ("found oid: %d, doing fast object lookup", oid);
 		int ret = ptp_object_want (params, oid, PTPOBJECT_OBJECTINFO_LOADED, &ob);
 		if (ret != PTP_RC_OK) {
 			oid = PTP_HANDLER_SPECIAL;
 		}
 	}
 	else {
+		GP_LOG_D ("did not find oid, performing card scan");
 		/* compute storage ID value from folder patch */
 		folder_to_storage(folder,storage);
 		/* Get file number omitting storage pseudofolder */
@@ -9491,11 +9529,28 @@ delete_file_func (CameraFilesystem *fs, const char *folder,
 
 	camera->pl->checkevents = TRUE;
 	C_PTP_REP (ptp_check_event (params));
-	/* compute storage ID value from folder patch */
-	folder_to_storage(folder,storage);
-	/* Get file number omitting storage pseudofolder */
-	find_folder_handle(params, folder, storage, oid);
-	oid = find_child(params, filename, storage, oid, NULL);
+
+	GP_LOG_D ("parsing filename for oid: %s", filename);
+	if((parse_filename_object_handle(filename, &oid)) != 0){
+		oid = 0;
+	}
+	if (oid == 0) {
+		GP_LOG_D ("looking up oid in filesystem info");
+		CameraFileInfo info;
+		gp_filesystem_get_info(fs, folder, filename, &info, context);
+		oid = info.ptp_object_handle;
+	} else {
+		GP_LOG_D ("Found oid in filename: %d", oid);
+	}
+
+	if (oid == 0) {
+		GP_LOG_D ("did not find oid, performing card scan");
+		/* compute storage ID value from folder patch */
+		folder_to_storage(folder,storage);
+		/* Get file number omitting storage pseudofolder */
+		find_folder_handle(params, folder, storage, oid);
+		oid = find_child(params, filename, storage, oid, NULL);
+	}
 
 	/* in some cases we return errors ... just ignore them for now */
 	LOG_ON_PTP_E (ptp_deleteobject(params, oid, 0));
@@ -9608,8 +9663,13 @@ get_info_func (CameraFilesystem *fs, const char *folder, const char *filename,
 
 	C_PARAMS (strcmp (folder, "/special"));
 
-	if (info->ptp_object_handle) {
+	if ((parse_filename_object_handle(filename, &oid)) != 0) {
+		oid = 0;
+	}
+	if ((oid == 0) && (info->ptp_object_handle != 0)) {
 		oid = info->ptp_object_handle;
+	}
+	if (oid != 0) {
 		int ret = ptp_object_want (params, oid, PTPOBJECT_OBJECTINFO_LOADED, &ob);
 		if (ret != PTP_RC_OK) {
 			oid = PTP_HANDLER_SPECIAL;
