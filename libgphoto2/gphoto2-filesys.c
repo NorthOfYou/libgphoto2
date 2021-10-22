@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <regex.h>
 
 #include <gphoto2/gphoto2-result.h>
 #include <gphoto2/gphoto2-port-log.h>
@@ -429,6 +430,31 @@ lookup_folder (
 }
 
 static int
+parse_filename_object_handle (const char *filename, uint32_t *object_handle) {
+	int res = 0;
+	const char* pattern = "^[^?]+\\?object_id=([0-9]+)$";
+	regex_t regex;
+	regmatch_t pmatch[10];
+	char *stopstring;
+	
+	res = regcomp(&regex, pattern, REG_EXTENDED);
+	if (res != 0) {
+		return res;
+	}
+	
+	res = regexec(&regex, filename, 10, pmatch, 0);
+	if (res != 0) {
+		regfree(&regex);
+		return res;
+	}
+
+	*object_handle = strtoul(filename+pmatch[1].rm_so, &stopstring, 10);
+
+	regfree(&regex);
+	return res;
+}
+
+static int
 lookup_folder_file (
 	CameraFilesystem *fs,
 	const char *folder, const char *filename,
@@ -441,24 +467,34 @@ lookup_folder_file (
 	GP_LOG_D ("Lookup folder %s file %s", folder, filename);
 	xf = lookup_folder (fs, fs->rootfolder, folder, context);
 	if (!xf) return GP_ERROR_DIRECTORY_NOT_FOUND;
-	/* Check if we need to load the filelist of the folder ... */
-	// if (xf->files_dirty) {
-	// 	CameraList	*list;
-	// 	int		ret;
-	// 	/*
-    //              * The folder is dirty. List the files in it to make it clean.
-	// 	 */
-	// 	GP_LOG_D ("Folder %s is dirty. "
-	// 		"Listing files in there to make folder clean...", folder);
-	// 	ret = gp_list_new (&list);
-	// 	if (ret == GP_OK) {
-	// 		ret = gp_filesystem_list_files (fs, folder, list, context);
-	// 		gp_list_free (list);
-	// 		GP_LOG_D ("Done making folder %s clean...", folder);
-	// 	}
-	// 	if (ret != GP_OK)
-	// 		GP_LOG_D ("Making folder %s clean failed: %d", folder, ret);
-	// }
+
+	uint32_t oid;
+	if ((parse_filename_object_handle(filename, &oid)) != 0){
+		oid = 0;
+	}
+	if (oid) {
+		gp_filesystem_append_fast(fs, folder, filename, context);
+	}
+	else {
+		/* Check if we need to load the filelist of the folder ... */
+		if (xf->files_dirty) {
+			CameraList	*list;
+			int		ret;
+			/*
+		             * The folder is dirty. List the files in it to make it clean.
+			 */
+			GP_LOG_D ("Folder %s is dirty. "
+				"Listing files in there to make folder clean...", folder);
+			ret = gp_list_new (&list);
+			if (ret == GP_OK) {
+				ret = gp_filesystem_list_files (fs, folder, list, context);
+				gp_list_free (list);
+				GP_LOG_D ("Done making folder %s clean...", folder);
+			}
+			if (ret != GP_OK)
+				GP_LOG_D ("Making folder %s clean failed: %d", folder, ret);
+		}
+	}
 
 	f = xf->files;
 	while (f) {
