@@ -3514,7 +3514,7 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 		gp_context_error (context, _("Sorry, your Canon camera does not support Canon Viewfinder mode"));
 		return GP_ERROR_NOT_SUPPORTED;
 	case PTP_VENDOR_NIKON: {
-		PTPPropertyValue	value;
+		// PTPPropertyValue	value;
 		int 			tries, firstimage = 0;
 
 		if (!ptp_operation_issupported(params, PTP_OC_NIKON_StartLiveView)) {
@@ -3534,71 +3534,71 @@ camera_capture_preview (Camera *camera, CameraFile *file, GPContext *context)
 		// 	params->controlmode = 1;
 		// }
 
-		ret = ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewStatus, &value, PTP_DTC_UINT8);
-		if (ret != PTP_RC_OK)
-			value.u8 = 0;
+		// ret = ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewStatus, &value, PTP_DTC_UINT8);
+		// if (ret != PTP_RC_OK)
+		// 	value.u8 = 0;
 
 enable_liveview:
-		if (!value.u8) {
-			value.u8 = 1;
-			if (have_prop(camera, params->deviceinfo.VendorExtensionID, PTP_DPC_NIKON_RecordingMedia))
-				LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_RecordingMedia, &value, PTP_DTC_UINT8));
-
-			if (have_prop(camera, params->deviceinfo.VendorExtensionID, PTP_DPC_NIKON_LiveViewProhibitCondition)) {
-				PTPPropertyValue	cond;
-				C_PTP (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewProhibitCondition, &cond, PTP_DTC_UINT32));
-
-				if (cond.u32) {
-					/* we could have multiple reasons, but just report the first one. by decreasing order of possibility */
-					if (cond.u32 & (1<<8)) { gp_context_error (context, _("Liveview cannot start: Battery exhausted")); return GP_ERROR; }
-					if (cond.u32 & (1<<17)){ gp_context_error (context, _("Liveview cannot start: Temperature too high")); return GP_ERROR; }
-					if (cond.u32 & (1<<9)) { gp_context_error (context, _("Liveview cannot start: TTL error")); return GP_ERROR; }
-					if (cond.u32 & (1<<22)){ gp_context_error (context, _("Liveview cannot start: In Mirror-up operation")); return GP_ERROR; }
-					if (cond.u32 & (1<<24)){ gp_context_error (context, _("Liveview cannot start: Lens is retracting")); return GP_ERROR; }
-					if (cond.u32 & (1<<5)) { gp_context_error (context, _("Liveview cannot start: Minimum aperture warning")); return GP_ERROR; }
-					if (cond.u32 & (1<<15)){ gp_context_error (context, _("Liveview cannot start: Processing of shooting operation")); return GP_ERROR; }
-					if (cond.u32 & (1<<2)) { gp_context_error (context, _("Liveview cannot start: Sequence error")); return GP_ERROR; }
-					if (cond.u32 & (1<<31)) { gp_context_error (context, _("Liveview cannot start: Exposure Program Mode is not P/A/S/M")); return GP_ERROR; }
-					if (cond.u32 & (1<<21)) { gp_context_error (context, _("Liveview cannot start: Bulb warning")); return GP_ERROR; }
-					if (cond.u32 & (1<<20)) { gp_context_error (context, _("Liveview cannot start: Card unformatted")); return GP_ERROR; }
-					if (cond.u32 & (1<<19)) { gp_context_error (context, _("Liveview cannot start: Card error")); return GP_ERROR; }
-					if (cond.u32 & (1<<18)) { gp_context_error (context, _("Liveview cannot start: Card protected")); return GP_ERROR; }
-					if (cond.u32 & (1<<14)) { gp_context_error (context, _("Liveview cannot start: Recording destination card, but no card or card protected")); return GP_ERROR; }
-					if (cond.u32 & (1<<12)) { gp_context_error (context, _("Liveview cannot start: Pending unretrieved SDRAM image")); return GP_ERROR; }
-					if (cond.u32 & (1<<12)) { gp_context_error (context, _("Liveview cannot start: Pending unretrieved SDRAM image")); return GP_ERROR; }
-					if (cond.u32 & (1<<4)) { gp_context_error (context, _("Liveview cannot start: Fully pressed button")); return GP_ERROR; }
-					gp_context_error (context, _("Liveview cannot start: code 0x%08x"), cond.u32);
-					return GP_ERROR;
-				}
-			}
-
-			ret = ptp_nikon_start_liveview (params);
-			if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
-				C_PTP_REP_MSG (ret, _("Nikon enable liveview failed"));
-
-			/* wait up to 1 second */
-			C_PTP_REP_MSG (nikon_wait_busy(params,20,2000), _("Nikon enable liveview failed"));
-			params->inliveview = 1;
-			firstimage = 1;
-		}
+// 		if (!value.u8) {
+// 			value.u8 = 1;
+// 			if (have_prop(camera, params->deviceinfo.VendorExtensionID, PTP_DPC_NIKON_RecordingMedia))
+// 				LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_RecordingMedia, &value, PTP_DTC_UINT8));
+//
+// 			if (have_prop(camera, params->deviceinfo.VendorExtensionID, PTP_DPC_NIKON_LiveViewProhibitCondition)) {
+// 				PTPPropertyValue	cond;
+// 				C_PTP (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewProhibitCondition, &cond, PTP_DTC_UINT32));
+//
+// 				if (cond.u32) {
+// 					/* we could have multiple reasons, but just report the first one. by decreasing order of possibility */
+// 					if (cond.u32 & (1<<8)) { gp_context_error (context, _("Liveview cannot start: Battery exhausted")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<17)){ gp_context_error (context, _("Liveview cannot start: Temperature too high")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<9)) { gp_context_error (context, _("Liveview cannot start: TTL error")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<22)){ gp_context_error (context, _("Liveview cannot start: In Mirror-up operation")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<24)){ gp_context_error (context, _("Liveview cannot start: Lens is retracting")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<5)) { gp_context_error (context, _("Liveview cannot start: Minimum aperture warning")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<15)){ gp_context_error (context, _("Liveview cannot start: Processing of shooting operation")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<2)) { gp_context_error (context, _("Liveview cannot start: Sequence error")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<31)) { gp_context_error (context, _("Liveview cannot start: Exposure Program Mode is not P/A/S/M")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<21)) { gp_context_error (context, _("Liveview cannot start: Bulb warning")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<20)) { gp_context_error (context, _("Liveview cannot start: Card unformatted")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<19)) { gp_context_error (context, _("Liveview cannot start: Card error")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<18)) { gp_context_error (context, _("Liveview cannot start: Card protected")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<14)) { gp_context_error (context, _("Liveview cannot start: Recording destination card, but no card or card protected")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<12)) { gp_context_error (context, _("Liveview cannot start: Pending unretrieved SDRAM image")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<12)) { gp_context_error (context, _("Liveview cannot start: Pending unretrieved SDRAM image")); return GP_ERROR; }
+// 					if (cond.u32 & (1<<4)) { gp_context_error (context, _("Liveview cannot start: Fully pressed button")); return GP_ERROR; }
+// 					gp_context_error (context, _("Liveview cannot start: code 0x%08x"), cond.u32);
+// 					return GP_ERROR;
+// 				}
+// 			}
+//
+// 			ret = ptp_nikon_start_liveview (params);
+// 			if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
+// 				C_PTP_REP_MSG (ret, _("Nikon enable liveview failed"));
+//
+// 			/* wait up to 1 second */
+// 			C_PTP_REP_MSG (nikon_wait_busy(params,20,2000), _("Nikon enable liveview failed"));
+// 			params->inliveview = 1;
+// 			firstimage = 1;
+// 		}
 		/* nikon 1 special */
-		if (value.u8 && !params->inliveview) {
-			ret = ptp_nikon_start_liveview (params);
-			if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
-				C_PTP_REP_MSG (ret, _("Nikon enable liveview failed"));
-
-			C_PTP_REP_MSG (nikon_wait_busy(params,20,2000), _("Nikon enable liveview failed"));
-			params->inliveview = 1;
-		}
-		tries = 20;
+// 		if (value.u8 && !params->inliveview) {
+// 			ret = ptp_nikon_start_liveview (params);
+// 			if ((ret != PTP_RC_OK) && (ret != PTP_RC_DeviceBusy))
+// 				C_PTP_REP_MSG (ret, _("Nikon enable liveview failed"));
+//
+// 			C_PTP_REP_MSG (nikon_wait_busy(params,20,2000), _("Nikon enable liveview failed"));
+// 			params->inliveview = 1;
+// 		}
+		tries = 2;
 		while (tries--) {
 			ret = ptp_nikon_get_liveview_image (params , &data, &size);
-			if (ret == PTP_RC_NIKON_NotLiveView) {
-				/* this happens on the D7000 after 14000 frames... reenable liveview */
-				params->inliveview = 0;
-				value.u8 = 0;
-				goto enable_liveview;
-			}
+			// if (ret == PTP_RC_NIKON_NotLiveView) {
+			// 	/* this happens on the D7000 after 14000 frames... reenable liveview */
+			// 	params->inliveview = 0;
+			// 	value.u8 = 0;
+			// 	goto enable_liveview;
+			// }
 			if (ret == PTP_RC_OK) {
 				if (firstimage) {
 					/* the first image on the S9700 is corrupted. so just skip the first image */
