@@ -19,6 +19,7 @@
  */
 #define _DEFAULT_SOURCE
 #include "config.h"
+#include "timespec.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -3464,80 +3465,144 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 		return GP_OK;
 	}
 
+	// Optimized FNumber set for Sony 200 mode cameras
+
 	GPContext 		*context = ((PTPData *) params->data)->context;
 	PTPPropertyValue	moveval;
 
 	char* targetstr;
-	float targetf, currentf, targetStops, currentStops, moves;
-
-	float maxApertureStops = 12;
-	float lastValuef = 0;
+	float f_target, f_current, f_start, f_prev = NAN;
+	float step_width = NAN;
+	float steps_raw;
+	unsigned int steps;
+	struct timespec step_width_delay, step_delay, seek_delay, time_start, time_end, time_before_wait, time_now, time_expires_at; 
+	step_width_delay = timespec_from_double(1.0);
+	step_delay = timespec_from_double(0.09);
+	seek_delay= timespec_from_double(3.0);
 
 
 	// Pull the target value
 	CR (gp_widget_get_value (widget, &targetstr));
 
 	// parse out the float
-	sscanf(targetstr, "f/%g", &targetf);
+	sscanf(targetstr, "f/%g", &f_target);
 
-	// printf("sony target aperture %g\n", targetf);
-
-	targetStops = maxApertureStops - (float)(log(targetf*targetf) / log(2));
+	clock_gettime(CLOCK_MONOTONIC, &time_start);
 
 	do {
-
+		//printf("LOOP BEGIN\n");
+		//printf("f_target = %g\n", f_target);
+		
 		C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
 		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));
+		f_current = ((float)dpd->CurrentValue.u16) / 100.0;
 
-		currentf = ((float)dpd->CurrentValue.u16) / 100.0;
+		//printf("f_current = %g\n", f_current);
 
-		// printf("sony current aperture %g\n", currentf);
+		// If already at f_target, break
+		if ( f_current == f_target ) break;
 
-		// Check how many stops we need to move
-		currentStops = maxApertureStops - (float)(log(currentf*currentf) / log(2));
-
-		// How many moves to get to the target (assumes camera is setup for 1/3rd stops)
-		moves = (currentStops - targetStops) * 3;
-
-		if (moves < 0.1 && moves > -0.1) {
-			break; // close enough
-		} else if (moves > 0) {
-			moveval.u8 = 0x01;
+		// Determine step direction
+		if ( f_target > f_current ) {
+			moveval.u8 = 0x01; // step up
+			//printf("step up\n");
 		} else {
-			moveval.u8 = 0xff;
+			moveval.u8 = 0xff; // step down
+			//printf("step down\n");
 		}
 
-		if (moves < 0 && moves > -2) {
-			moves = -1;
-		} else if (moves > 0 && moves < 2) {
-			moves = 1;
-		}
+		// Calcuate step width unless already calculated
+		if (step_width != step_width) {
+			//printf("calculating step_width\n");
 
-		// Make the number of predicted moves
-		for (int i=0;i < ceil(abs(moves));i++) {
+			// Step once to determine step_width
+			f_start = f_current;
 			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
-			usleep(1000);
+			// Poll for new f-value or until timeout
+			clock_gettime(CLOCK_MONOTONIC, &time_before_wait);
+			time_expires_at = timespec_add(time_before_wait, step_width_delay);
+			do {
+				C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+				C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));	
+				f_current = ((float)dpd->CurrentValue.u16) / 100.0;
+				if ( (f_current == f_target) || (f_start != f_current) ) break;
+				clock_gettime(CLOCK_MONOTONIC, &time_now);
+				if ( timespec_gt(time_now, time_expires_at) ) break;
+			} while(1);
+
+			//printf("f_start = %g\n", f_start);
+			//printf("f_current = %g\n", f_current);
+
+			// Break if this was a single step, or we've hit the min/max and there's no change
+			if ( (f_current == f_target) || (f_current == f_start)) break;
+
+			// Calculate the step_width
+			step_width = 2.0 * (log(f_start/f_current)/log(2.0)) / 1.0;
+
+			//printf("calculated step_width = %g\n", step_width);
+
+			// Bucket step_width to 1/3, 1/2, or 1
+			step_width = fabs(step_width);
+			if ((step_width > 0) && (step_width < 0.5)) {
+				step_width = 1.0/3.0;
+			} else if ((step_width >= 0.5) && (step_width < 0.75)) {
+				step_width = 0.5;
+			} else {
+				step_width = 1.0;
+			}
+
+			//printf("bucketed step_width = %g\n", step_width);
+
+			//continue; // repeat the loop now that step_width is calculated
 		}
 
-		if (targetf == currentf) {
-			// Hit target value
-			break;
+		//printf("step_width = %g\n", step_width);
+
+		// Calculate number of steps between f_current and f_target
+		steps_raw = 2.0 * (log(f_current/f_target)/log(2)) / step_width;
+		//printf("steps_raw = %g\n", steps_raw);
+		
+		steps = round(fabs(steps_raw));
+		//printf("calculated required steps = %d\n", steps);
+
+		// Prepare to seek to f_target
+		f_start = f_current;
+		// Seek the number of steps
+		for(unsigned int i=0; i<steps; i++) {
+			//printf("step i=%d\n", i);
+			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
+			usleep(timespec_to_ms(step_delay)*1000);
 		}
 
-		// Check to make sure we're not stuck not movie
-		if (lastValuef != 0 && abs(currentf - lastValuef) < 0.3) {
-			// No movement
-			break;
-		}
-		lastValuef = currentf;
+		// Wait until we hit the f_target or we timeout
+		clock_gettime(CLOCK_MONOTONIC, &time_before_wait);
+		time_expires_at = timespec_add(time_before_wait, seek_delay);
+		do {
+			C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+			C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));	
+			f_current = ((float)dpd->CurrentValue.u16) / 100.0;
+			if ( (f_current == f_target) ) break;
+			clock_gettime(CLOCK_MONOTONIC, &time_now);
+			if ( timespec_gt(time_now, time_expires_at) ) break;
+			//usleep(1000);
+		} while(1);
 
-		// sleep time
-		// 350,000 on A7SIII : Traversal f/1.8 -> f/22 0.98s, avg jump time: 0.5994023815375208
-		// 300,000 on A7SIII : Traversal f/1.8 -> f/22 0.820346583997889, avg jump time: 0.5268628827114068
-		// <300,000 had failed jumps
+		//unsigned int steps_successful = steps - round(fabs((2.0 * (log(f_current/f_target)/log(2)) / step_width)));
+		//printf("steps_successful = %d\n", steps_successful);
 
-		usleep(300000);
+		// Break if we hit the target
+		if (f_current == f_target) break;
+		// Break if we hit min/max (no change)
+		if (f_current == f_prev) break;
+
+		f_prev = f_current;
+
+		//printf("LOOP END\n");
 	} while(1);
+
+	clock_gettime(CLOCK_MONOTONIC, &time_end);
+
+	GP_LOG_D("f-number seek duration: %g sec", timespec_to_double(timespec_sub(time_end, time_start)));
 
 	return GP_OK;
 }
