@@ -3492,22 +3492,18 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 	clock_gettime(CLOCK_MONOTONIC, &time_start);
 
 	do {
-		
-		
-
 		//printf("LOOP BEGIN\n");
 		//printf("f_target = %g\n", f_target);
 
-		
 		C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
 		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));
 		f_current = ((float)dpd->CurrentValue.u16) / 100.0;
 
-		printf("f_current = %g\n", f_current);
+		//printf("f_current = %g\n", f_current);
 
 		// If steps are explicitly provided, then do those steps
 		if ( steps_raw == steps_raw ) {
-			printf("doing explicit steps\n");
+			//printf("doing explicit steps\n");
 			steps = abs(round(steps_raw));
 
 			if ( steps == 0 ) break;
@@ -3522,11 +3518,6 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 			f_prev = f_current;
 
 			int step_sleep = timespec_to_ms(step_delay)*1000;
-			// for(unsigned int i=0; i<steps; i++) {
-			// 	//printf("step i=%d\n", i);
-			// 	C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
-			// 	usleep(step_sleep);
-			// }
 			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
 			usleep(step_sleep*steps);
 
@@ -3550,8 +3541,7 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 			break;
 		}
 
-
-		printf("f_target = %f\n", f_target);
+		//printf("f_target = %f\n", f_target);
 		// If f_target not provided; break
 		if ( f_target != f_target ) break;
 
@@ -3620,14 +3610,7 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 		//printf("steps_raw = %g\n", steps_raw);
 		
 		steps = round(fabs(steps_raw));
-		printf("calculated required steps = %d\n", steps);
-
-		// if ( f_target > f_current ) {
-		// 	moveval.u8 += steps;
-		// } else {
-		// 	moveval.u8 -= steps;
-		// }
-		// printf("moveval.u8 = 0x%02x\n", moveval.u8);
+		//printf("calculated required steps = %d\n", steps);
 
 		// Prepare to seek to f_target
 		f_start = f_current;
