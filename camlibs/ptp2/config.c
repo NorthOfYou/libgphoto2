@@ -3109,9 +3109,9 @@ _put_Sony_ISO(CONFIG_PUT_ARGS)
 			moveval.u8 = 0;
 
 			if ( steps_raw > 0 ) {
-				moveval.u8 = steps;
+				moveval.u8 += steps;
 			} else {
-				moveval.u8 = 0x100-steps;
+				moveval.u8 -= steps;
 			}
 
 			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, dpd->DevicePropertyCode, &moveval, PTP_DTC_UINT8 ));
