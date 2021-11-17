@@ -5516,8 +5516,14 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 	uint32_t		new32, origval;
 	PTPParams		*params = &(camera->pl->params);
 	GPContext 		*context = ((PTPData *) params->data)->context;
-	time_t			start,end;
+	struct timespec 	start,end;
 	unsigned int		i;
+	struct timespec time_start, time_end;
+	double update_wait_sec;
+	float  steps_raw = NAN;
+	unsigned int steps = 0;
+
+	clock_gettime(CLOCK_MONOTONIC, &time_start);
 
 	CR (gp_widget_get_value (widget, &val));
 
@@ -5551,9 +5557,79 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 		propval->u32 = new32;
 
 		ret = translate_ptp_result (ptp_sony_setdevicecontrolvaluea(params, dpd->DevicePropertyCode, propval, PTP_DTC_UINT32));
+		clock_gettime(CLOCK_MONOTONIC, &time_end);
+		GP_LOG_D("duration: %g sec", timespec_to_double(timespec_sub(time_end, time_start)));
 		if (ret == GP_OK) ret = PUT_OK;
 		return ret;
 	}
+
+	sscanf(val, "step(%g)", &steps_raw);
+	if( steps_raw == steps_raw ) {
+		GP_LOG_D("doing explicit steps");
+		steps = abs(round(steps_raw));
+		if ( steps == 0 ) {
+			return PUT_OK;
+		}
+
+		uint32_t prev_val = dpd->CurrentValue.u32;
+
+		value.u8 = 0;
+		
+		if (steps_raw > 0) {
+			value.u8 -= steps;
+		} else {
+			value.u8 += steps;
+		}
+
+		C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, dpd->DevicePropertyCode, &value, PTP_DTC_UINT8 ));
+
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		do {
+			C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+			C_PTP_REP (ptp_generic_getdevicepropdesc (params, dpd->DevicePropertyCode, dpd));
+			clock_gettime(CLOCK_MONOTONIC, &end);
+			update_wait_sec = timespec_to_double(timespec_sub(end, start));
+
+			if ( dpd->CurrentValue.u32 != prev_val ) {
+				GP_LOG_D("value updated (%g sec elapsed", update_wait_sec);
+				break;
+			}
+
+			if (update_wait_sec > 3.0) {
+				GP_LOG_D("value update has exceeded timeout (%g sec elapsed)", update_wait_sec);	
+				break;
+			}
+
+			GP_LOG_D("waiting for value to update (%g sec elapsed)", update_wait_sec);
+
+			usleep(20*1000);
+		} while (1);
+
+		char buf[20];
+
+		if (dpd->CurrentValue.u32 == 0) {
+			strcpy(buf,_("Bulb"));
+		} else {
+			x = dpd->CurrentValue.u32>>16;
+			y = dpd->CurrentValue.u32&0xffff;
+
+			// Normalize current value from 300/10, 250/10 etc. to integers too.
+			if (y == 10 && x % 10 == 0) {
+				x /= 10;
+				y = 1;
+			}
+
+			if (y == 1)
+				sprintf (buf, "%d",x);
+			else
+				sprintf (buf, "%d/%d",x,y);
+		}
+		gp_widget_set_value (widget, buf);
+
+		return PUT_OK;
+	}
+		
+
 
 	if (dpd->CurrentValue.u32 == 0) {
 		x = 65536; y = 1;
@@ -5610,6 +5686,8 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 	}
 
 	do {
+		
+		
 		origval = dpd->CurrentValue.u32;
 		if (old == new)
 			break;
@@ -5628,6 +5706,8 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 		else
 			value.u8 = 0x100 + position_new - position_current;
 
+		GP_LOG_D("shutterspeed: position_current=%d, position_new=%d, jump_width=%d", position_current, position_new, position_new-position_current);
+
 		a = dpd->CurrentValue.u32>>16;
 		b = dpd->CurrentValue.u32&0xffff;
 		C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, dpd->DevicePropertyCode, &value, PTP_DTC_UINT8 ));
@@ -5635,13 +5715,15 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 		GP_LOG_D ("shutterspeed value is (0x%x vs target 0x%x)", origval, new32);
 
 		/* we tell the camera to do it, but it takes around 0.7 seconds for the SLT-A58 */
-		time(&start);
+		clock_gettime(CLOCK_MONOTONIC, &start);
 		do {
 			C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
 			C_PTP_REP (ptp_generic_getdevicepropdesc (params, dpd->DevicePropertyCode, dpd));
+			clock_gettime(CLOCK_MONOTONIC, &end);
+			update_wait_sec = timespec_to_double(timespec_sub(end, start));
 
 			if (dpd->CurrentValue.u32 == new32) {
-				GP_LOG_D ("Value matched!");
+				GP_LOG_D ("Value matched! (%g sec elapsed)", update_wait_sec);
 				break;
 			}
 			a = dpd->CurrentValue.u32>>16;
@@ -5649,19 +5731,24 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 			current = ((float)a)/((float)b);
 
 			if ((a*y != 0) && (a*y == b*x)) {
-				GP_LOG_D ("Value matched via math(tm) %d/%d == %d/%d!",x,y,a,b);
+				GP_LOG_D ("Value matched via math(tm) %d/%d == %d/%d! (%g sec elapsed)",x,y,a,b, update_wait_sec);
 				break;
 			}
 
 			if (dpd->CurrentValue.u32 != origval) {
-				GP_LOG_D ("value changed (0x%x vs 0x%x vs target 0x%x), next step....", dpd->CurrentValue.u32, origval, new32);
+				GP_LOG_D ("value changed (0x%x vs 0x%x vs target 0x%x), next step.... (%g sec elapsed)", dpd->CurrentValue.u32, origval, new32, update_wait_sec);
 				break;
 			}
 
-			usleep(200*1000);
+			if (update_wait_sec > 3.0) {
+				GP_LOG_D("value update has exceeded timeout (%g sec elapsed)", update_wait_sec);	
+				break;
+			}
 
-			time(&end);
-		} while (end-start <= 3);
+			GP_LOG_D("waiting for value to update (%g sec elapsed)", update_wait_sec);
+
+			usleep(20*1000);
+		} while (1);
 
 		if (direction > 0 && current <= new) {
 			GP_LOG_D ("Overshooted value, maybe choice not available!");
@@ -5686,7 +5773,9 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 		}
 	} while (1);
 	propval->u32 = new;
-	return GP_OK;
+	clock_gettime(CLOCK_MONOTONIC, &time_end);
+	GP_LOG_D("duration: %g sec", timespec_to_double(timespec_sub(time_end, time_start)));
+	return PUT_OK;
 }
 
 static int
