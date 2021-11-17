@@ -3519,20 +3519,20 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 
 			int step_sleep = timespec_to_ms(step_delay)*1000;
 			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
-			usleep(step_sleep*steps);
+			//usleep(step_sleep*steps);
 
-			// Wait until value changes
-			clock_gettime(CLOCK_MONOTONIC, &time_before_wait);
-			time_expires_at = timespec_add(time_before_wait, seek_delay);
-			do {
-				C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
-				C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));	
-				f_current = ((float)dpd->CurrentValue.u16) / 100.0;
-				if ( (f_current != f_prev) ) break;
-				clock_gettime(CLOCK_MONOTONIC, &time_now);
-				if ( timespec_gt(time_now, time_expires_at) ) break;
-				//usleep(1000);
-			} while(1);
+			// // Wait until value changes
+			// clock_gettime(CLOCK_MONOTONIC, &time_before_wait);
+			// time_expires_at = timespec_add(time_before_wait, seek_delay);
+			// do {
+			// 	C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+			// 	C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));	
+			// 	f_current = ((float)dpd->CurrentValue.u16) / 100.0;
+			// 	if ( (f_current != f_prev) ) break;
+			// 	clock_gettime(CLOCK_MONOTONIC, &time_now);
+			// 	if ( timespec_gt(time_now, time_expires_at) ) break;
+			// 	//usleep(1000);
+			// } while(1);
 
 			char	buf[20];
 			sprintf(buf,"f/%g",f_current);
@@ -5583,27 +5583,27 @@ _put_Sony_ShutterSpeed(CONFIG_PUT_ARGS) {
 
 		C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, dpd->DevicePropertyCode, &value, PTP_DTC_UINT8 ));
 
-		clock_gettime(CLOCK_MONOTONIC, &start);
-		do {
-			C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
-			C_PTP_REP (ptp_generic_getdevicepropdesc (params, dpd->DevicePropertyCode, dpd));
-			clock_gettime(CLOCK_MONOTONIC, &end);
-			update_wait_sec = timespec_to_double(timespec_sub(end, start));
+		// clock_gettime(CLOCK_MONOTONIC, &start);
+		// do {
+		// 	C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+		// 	C_PTP_REP (ptp_generic_getdevicepropdesc (params, dpd->DevicePropertyCode, dpd));
+		// 	clock_gettime(CLOCK_MONOTONIC, &end);
+		// 	update_wait_sec = timespec_to_double(timespec_sub(end, start));
 
-			if ( dpd->CurrentValue.u32 != prev_val ) {
-				GP_LOG_D("value updated (%g sec elapsed", update_wait_sec);
-				break;
-			}
+		// 	if ( dpd->CurrentValue.u32 != prev_val ) {
+		// 		GP_LOG_D("value updated (%g sec elapsed", update_wait_sec);
+		// 		break;
+		// 	}
 
-			if (update_wait_sec > 3.0) {
-				GP_LOG_D("value update has exceeded timeout (%g sec elapsed)", update_wait_sec);	
-				break;
-			}
+		// 	if (update_wait_sec > 3.0) {
+		// 		GP_LOG_D("value update has exceeded timeout (%g sec elapsed)", update_wait_sec);	
+		// 		break;
+		// 	}
 
-			GP_LOG_D("waiting for value to update (%g sec elapsed)", update_wait_sec);
+		// 	GP_LOG_D("waiting for value to update (%g sec elapsed)", update_wait_sec);
 
-			usleep(20*1000);
-		} while (1);
+		// 	usleep(20*1000);
+		// } while (1);
 
 		char buf[20];
 
