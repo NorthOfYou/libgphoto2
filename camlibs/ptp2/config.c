@@ -3095,13 +3095,36 @@ _put_Sony_ISO(CONFIG_PUT_ARGS)
 	const char	*value;
 	uint32_t	raw_iso;
 	PTPParams	*params = &(camera->pl->params);
+	GPContext 	*context = ((PTPData *) params->data)->context;
+	float       steps_raw = NAN;
+	unsigned int steps = 0;
 
 	CR (gp_widget_get_value(widget, &value));
-	CR (_parse_Sony_ISO(value, &raw_iso));
 
+	sscanf(value, "step(%g)", &steps_raw);
+	if ( steps_raw == steps_raw ) {
+		steps = abs(round(steps_raw));
+		if ( steps > 0 ) {
+			PTPPropertyValue moveval;
+			moveval.u8 = 0;
+
+			if ( steps_raw > 0 ) {
+				moveval.u8 = steps;
+			} else {
+				moveval.u8 = 0x100-steps;
+			}
+
+			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, dpd->DevicePropertyCode, &moveval, PTP_DTC_UINT8 ));
+		}
+
+		gp_widget_set_value(widget, value);
+		return PUT_OK;
+	}
+
+	CR (_parse_Sony_ISO(value, &raw_iso));
 	propval->u32 = raw_iso;
 
-	if( has_sony_mode_300(params) ) {
+	if ( has_sony_mode_300(params) ) {
 		return GP_OK;
 	}
 
