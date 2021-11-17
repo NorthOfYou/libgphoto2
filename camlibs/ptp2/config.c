@@ -3448,13 +3448,13 @@ _get_Sony_FNumber(CONFIG_GET_ARGS) {
 static int
 _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 	PTPParams		*params = &(camera->pl->params);
+	char* value;
+
+	CR (gp_widget_get_value (widget, &value));
 
 	if( has_sony_mode_300(params) ) {
 		float		fvalue = 0.0;
-		char *		value;
-		PTPParams	*params = &(camera->pl->params);
 
-		CR (gp_widget_get_value (widget, &value));
 		if (strstr (value, "f/") == value)
 			value += strlen("f/");
 		if (sscanf(value, "%g", &fvalue))
@@ -3465,44 +3465,101 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 		return GP_OK;
 	}
 
+
 	// Optimized FNumber set for Sony 200 mode cameras
 
 	GPContext 		*context = ((PTPData *) params->data)->context;
 	PTPPropertyValue	moveval;
 
-	char* targetstr;
-	float f_target, f_current, f_start, f_prev = NAN;
+	float f_target=NAN, f_current=NAN, f_start=NAN, f_prev = NAN;
 	float step_width = NAN;
-	float steps_raw;
-	unsigned int steps;
+	float steps_raw=NAN;
+	unsigned int steps=0;
 	struct timespec step_width_delay, step_delay, seek_delay, time_start, time_end, time_before_wait, time_now, time_expires_at; 
 	step_width_delay = timespec_from_double(1.0);
 	step_delay = timespec_from_double(0.09);
 	seek_delay= timespec_from_double(3.0);
 
+	// assume 1/3 steps width; comment out to enable measuring
+	step_width = 1.0/3.0;
 
-	// Pull the target value
-	CR (gp_widget_get_value (widget, &targetstr));
 
-	// parse out the float
-	sscanf(targetstr, "f/%g", &f_target);
+	// parse out fnum
+	sscanf(value, "f/%g", &f_target);
+	// parse out steps 
+	sscanf(value, "step(%g)", &steps_raw);
 
 	clock_gettime(CLOCK_MONOTONIC, &time_start);
 
 	do {
+		
+		
+
 		//printf("LOOP BEGIN\n");
 		//printf("f_target = %g\n", f_target);
+
 		
 		C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
 		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));
 		f_current = ((float)dpd->CurrentValue.u16) / 100.0;
 
-		//printf("f_current = %g\n", f_current);
+		printf("f_current = %g\n", f_current);
+
+		// If steps are explicitly provided, then do those steps
+		if ( steps_raw == steps_raw ) {
+			printf("doing explicit steps\n");
+			steps = abs(round(steps_raw));
+
+			if ( steps == 0 ) break;
+
+			if ( steps_raw > 0 ) {
+				//moveval.u8 = 0x01;
+				moveval.u8 = steps;
+			} else {
+				moveval.u8 = (uint8_t)(0-steps);
+			}
+
+			f_prev = f_current;
+
+			int step_sleep = timespec_to_ms(step_delay)*1000;
+			// for(unsigned int i=0; i<steps; i++) {
+			// 	//printf("step i=%d\n", i);
+			// 	C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
+			// 	usleep(step_sleep);
+			// }
+			C_PTP_REP (ptp_sony_setdevicecontrolvalueb (params, PTP_DPC_FNumber, &moveval, PTP_DTC_UINT8 ));
+			usleep(step_sleep*steps);
+
+			// Wait until value changes
+			clock_gettime(CLOCK_MONOTONIC, &time_before_wait);
+			time_expires_at = timespec_add(time_before_wait, seek_delay);
+			do {
+				C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
+				C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FNumber, dpd));	
+				f_current = ((float)dpd->CurrentValue.u16) / 100.0;
+				if ( (f_current != f_prev) ) break;
+				clock_gettime(CLOCK_MONOTONIC, &time_now);
+				if ( timespec_gt(time_now, time_expires_at) ) break;
+				//usleep(1000);
+			} while(1);
+
+			char	buf[20];
+			sprintf(buf,"f/%g",f_current);
+			gp_widget_set_value (widget,buf);
+
+			break;
+		}
+
+
+		printf("f_target = %f\n", f_target);
+		// If f_target not provided; break
+		if ( f_target != f_target ) break;
 
 		// If already at f_target, break
 		if ( f_current == f_target ) break;
 
 		// Determine step direction
+		//moveval.u8 = 0;
 		if ( f_target > f_current ) {
 			moveval.u8 = 0x01; // step up
 			//printf("step up\n");
@@ -3563,7 +3620,14 @@ _put_Sony_FNumber(CONFIG_PUT_ARGS) {
 		//printf("steps_raw = %g\n", steps_raw);
 		
 		steps = round(fabs(steps_raw));
-		//printf("calculated required steps = %d\n", steps);
+		printf("calculated required steps = %d\n", steps);
+
+		// if ( f_target > f_current ) {
+		// 	moveval.u8 += steps;
+		// } else {
+		// 	moveval.u8 -= steps;
+		// }
+		// printf("moveval.u8 = 0x%02x\n", moveval.u8);
 
 		// Prepare to seek to f_target
 		f_start = f_current;
