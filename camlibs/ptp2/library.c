@@ -6432,11 +6432,11 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 			return GP_OK;
 
 		/* Nikon 1 ... if af is 0, it reports PTP_RC_NIKON_InvalidStatus */
-		if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
-			ret = ptp_nikon_capture2 (params, 1, sdram);
-			if (ret == PTP_RC_OK)
-				return GP_OK;
-		}
+		// if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
+		// 	ret = ptp_nikon_capture2 (params, 1, sdram);
+		// 	if (ret == PTP_RC_OK)
+		// 		return GP_OK;
+		// }
 
 		return translate_ptp_result (ret);
 
