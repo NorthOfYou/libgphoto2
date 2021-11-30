@@ -4251,11 +4251,11 @@ camera_nikon_capture (Camera *camera, CameraCaptureType type, CameraFilePath *pa
 		do {
 			ret = ptp_nikon_capture2 (params, af, sdram);
 			/* Nikon 1 ... if af is 0, it reports PTP_RC_NIKON_InvalidStatus */
-			if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
-				ret = ptp_nikon_capture2 (params, 1, sdram);
-				if (ret == PTP_RC_OK)
-					break;
-			}
+			// if (!af && ((ret == PTP_RC_NIKON_InvalidStatus))) {
+			// 	ret = ptp_nikon_capture2 (params, 1, sdram);
+			// 	if (ret == PTP_RC_OK)
+			// 		break;
+			// }
 
 			if (	(ret == PTP_RC_DeviceBusy) ||
 				/* this is seen on Nikon V3 */
