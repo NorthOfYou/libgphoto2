@@ -8436,8 +8436,15 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 			params->inliveview = 1;
 		}
 	} else {
-		if (ptp_operation_issupported(params, PTP_OC_NIKON_EndLiveView))
-			C_PTP (ptp_nikon_end_liveview (params));
+		if (ptp_operation_issupported(params, PTP_OC_NIKON_EndLiveView)) {
+			uint16_t res = ptp_nikon_end_liveview (params);
+			// printf("Live view end code: %d\n", res);
+			if (res == 0xa004) {
+				// PTP_C(ptp_nikon_device_ready(params));
+				return GP_ERROR_CAMERA_BUSY;
+			}
+			C_PTP(res);
+		}
 		params->inliveview = 0;
 	}
 	return GP_OK;
