@@ -7929,7 +7929,7 @@ _put_Canon_EOS_MFDrive(CONFIG_PUT_ARGS) {
 		   "Canon manual focus drive 0x%x failed", xval);
 	/* Get the next set of event data */
 	C_PTP (ptp_check_eos_events (params));
-	return GP_OK;
+	return PUT_OK;
 }
 
 static int
@@ -11638,6 +11638,10 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 					if (ret == GP_OK) continue; /* see if we have another match */
 				} else {
 					ret = cursub->putfunc (camera, widget, NULL, NULL);
+					if (ret == PUT_OK) {
+						ret = GP_OK;
+						continue; 
+					}
 				}
 				if (mode == MODE_SINGLE_SET)
 					return ret;
