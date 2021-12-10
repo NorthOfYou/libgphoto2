@@ -11548,6 +11548,10 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 		if (!params->eos_captureenabled)
 			camera_prepare_capture (camera, context);
 		ptp_check_eos_events (params);
+		
+		// Check if camera is busy
+		if (params->eos_camerastatus == 1)
+			return GP_ERROR_CAMERA_BUSY;
 	}
 
 	if (mode == MODE_SET)
