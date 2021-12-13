@@ -6081,11 +6081,11 @@ camera_trigger_canon_eos_capture (Camera *camera, GPContext *context)
 		camera_prepare_capture (camera, context);
 	} else {
 		// printf("camera_canon_eos_update_capture_target\n");
-		CR( camera_canon_eos_update_capture_target(camera, context, -1));
+		//CR( camera_canon_eos_update_capture_target(camera, context, -1));
 	}
 
 	// Check camera event queue (necessary to detect if camera is busy)
-	ptp_check_eos_events (params);
+	//ptp_check_eos_events (params);
 	
 	// Check if camera is busy
 	if (params->eos_camerastatus == 1)
