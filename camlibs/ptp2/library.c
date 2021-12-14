@@ -8952,6 +8952,7 @@ read_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	uint64_t obj_size;
 	uint32_t offset32 = offset64, size32 = *size64;
 	PTPObject *ob;
+	CameraFileInfo info;
 
 	SET_CONTEXT_P(params, context);
 
@@ -8971,11 +8972,33 @@ read_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 		return GP_ERROR_NOT_SUPPORTED;
 	}
 
-	/* compute storage ID value from folder patch */
-	folder_to_storage(folder,storage);
-	/* Get file number omitting storage pseudofolder */
-	find_folder_handle(params, folder, storage, oid);
-	oid = find_child(params, filename, storage, oid, &ob);
+	GP_LOG_D ("parsing filename for oid: %s", filename);
+	if((parse_filename_object_handle(filename, &oid)) != 0){
+		oid = 0;
+	}
+	if (oid == 0) {
+		GP_LOG_D ("looking up oid in filesystem info");
+		gp_filesystem_get_info(fs, folder, filename, &info, context);
+		oid = info.ptp_object_handle;
+	} else {
+		GP_LOG_D ("Found oid in filename: %d", oid);
+	}
+
+	if (oid) {
+		GP_LOG_D ("found oid: %d, doing fast object lookup", oid);
+		int ret = ptp_object_want (params, oid, PTPOBJECT_OBJECTINFO_LOADED, &ob);
+		if (ret != PTP_RC_OK) {
+			oid = PTP_HANDLER_SPECIAL;
+		}
+	} else {
+		GP_LOG_D ("did not find oid, performing card scan");
+		/* compute storage ID value from folder patch */
+		folder_to_storage(folder,storage);
+		/* Get file number omitting storage pseudofolder */
+		find_folder_handle(params, folder, storage, oid);
+		oid = find_child(params, filename, storage, oid, &ob);
+	}
+
 	if (oid == PTP_HANDLER_SPECIAL) {
 		gp_context_error (context, _("File '%s/%s' does not exist."), folder, filename);
 		return GP_ERROR_BAD_PARAMETERS;
