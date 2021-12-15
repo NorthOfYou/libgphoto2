@@ -9066,11 +9066,24 @@ _put_Nikon_Movie(CONFIG_PUT_ARGS)
 		}
 		/* switch Application Mode off again, otherwise we cannot get to the filesystem */
 		if (have_prop(camera,PTP_VENDOR_NIKON,PTP_DPC_NIKON_ApplicationMode)) {
+
 			value.u8 = 1;
 			C_PTP (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_ApplicationMode, &value, PTP_DTC_UINT8));
 			if (value.u8 != 0) {
 				value.u8 = 0;
-				C_PTP (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_ApplicationMode, &value, PTP_DTC_UINT8));
+
+				// may take a few attempts to return the application mode to 0
+				int tries = 10, updated_application_mode = 0;
+				do {
+					ret = ptp_setdevicepropvalue (params, PTP_DPC_NIKON_ApplicationMode, &value, PTP_DTC_UINT8);
+					if (ret == PTP_RC_OK)
+						break;
+
+					usleep(100*1000);
+				} while (!updated_application_mode && tries--);
+
+				if (ret != PTP_RC_OK)
+					return ret;
 			}
 		}
 		if (ptp_operation_issupported(params, PTP_OC_NIKON_ChangeApplicationMode)) {
