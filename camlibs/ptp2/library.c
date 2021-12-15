@@ -144,6 +144,7 @@ translate_ptp_result (uint16_t result)
 	case PTP_RC_ParameterNotSupported:	return GP_ERROR_BAD_PARAMETERS;
 	case PTP_RC_OperationNotSupported:	return GP_ERROR_NOT_SUPPORTED;
 	case PTP_RC_DeviceBusy:			return GP_ERROR_CAMERA_BUSY;
+	case PTP_RC_NIKON_Bulb_Release_Busy: return GP_ERROR_CAMERA_BUSY;
 	case PTP_ERROR_NODEVICE:		return GP_ERROR_IO_USB_FIND;
 	case PTP_ERROR_TIMEOUT:			return GP_ERROR_TIMEOUT;
 	case PTP_ERROR_CANCEL:			return GP_ERROR_CANCEL;
@@ -6428,6 +6429,10 @@ camera_trigger_capture (Camera *camera, GPContext *context)
 // 		C_PTP_REP (ptp_check_event (params));
 // 		C_PTP_REP (nikon_wait_busy (params, 100, 2000)); /* lets wait 2 seconds */
 // 		C_PTP_REP (ptp_check_event (params));
+
+// 		Check busy and return GP_ERROR_CAMERA_BUSY, handle retries at a higher level
+			C_PTP_REP (ptp_nikon_device_ready(params));
+
 //
 // 		if (ptp_property_issupported (params, PTP_DPC_NIKON_LiveViewStatus)) {
 // 			ret = ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewStatus, &propval, PTP_DTC_UINT8);
