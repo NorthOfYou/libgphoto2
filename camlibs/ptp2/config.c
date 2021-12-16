@@ -7945,6 +7945,8 @@ _put_Nikon_MFDrive(CONFIG_PUT_ARGS) {
 
 	if (!ptp_operation_issupported(&camera->pl->params, PTP_OC_NIKON_MfDrive))
 		return (GP_ERROR_NOT_SUPPORTED);
+
+	C_PTP_REP (ptp_nikon_device_ready(params));
 	gp_widget_get_value(widget, &val);
 
 	if (val<0) {
@@ -7960,8 +7962,12 @@ _put_Nikon_MFDrive(CONFIG_PUT_ARGS) {
 		gp_context_error (context, _("Nikon manual focus works only in LiveView mode."));
 		return GP_ERROR;
 	}
-	if (ret != PTP_RC_OK)
+	if (ret != PTP_RC_OK) {
+		if (ret == 0xa004) {
+			return GP_ERROR_CAMERA_BUSY;
+		}
 		return translate_ptp_result(ret);
+	}
 
 	/* The mf drive operation has started ... wait for it to
 	 * finish. */
