@@ -2852,6 +2852,9 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			ce[i].u.status =  dtoh32a(curdata+8);
 			ptp_debug (params, "event %d: EOS event CameraStatusChanged (size %d) = %d", i, size, dtoh32a(curdata+8));
 			params->eos_camerastatus = dtoh32a(curdata+8);
+			if ((params->eos_camerastatus_block != 0) || (params->eos_camerastatus_block != 1)) {
+				params->eos_camerastatus_block = 1;
+			}
 			break;
 		case 0: /* end marker */
 			if (size == 8) /* no output */

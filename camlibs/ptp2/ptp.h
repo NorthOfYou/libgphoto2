@@ -3795,6 +3795,7 @@ struct _PTPParams {
 	unsigned int		nrofbacklogentries;
 	int			eos_captureenabled;
 	int			eos_camerastatus;
+	int         eos_camerastatus_block;
 
 	/* PTP: Nikon specifics */
 	int			controlmode;
