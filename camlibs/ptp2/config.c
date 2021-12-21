@@ -6377,30 +6377,15 @@ static struct deviceproptableu16 focusmodes[] = {
 };
 GENERIC16TABLE(FocusMode,focusmodes)
 
-/* Sony specific, we need to wait for it settle (around 1 second), otherwise we get trouble later on */
 static int
 _put_Sony_FocusMode(CONFIG_PUT_ARGS) {
 	PTPParams		*params = &(camera->pl->params);
 	GPContext 		*context = ((PTPData *) params->data)->context;
 	int 			ret;
-	PTPDevicePropDesc	dpd2;
-	time_t			start,end;
 
 	ret = _put_FocusMode(CONFIG_PUT_NAMES);
 	if (ret != GP_OK) return ret;
-	start = time(NULL);
 	C_PTP_REP (ptp_generic_setdevicepropvalue (params, PTP_DPC_FocusMode, propval, PTP_DTC_UINT16));
-	while (1) {
-		C_PTP_REP (ptp_sony_getalldevicepropdesc (params));
-		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_FocusMode, &dpd2));
-		if (dpd2.CurrentValue.u16 == propval->u16)
-			break;
-		end = time(NULL);
-		if (end-start >= 3) {
-			GP_LOG_E("failed to change variable to %d (current %d)\n", propval->u16, dpd2.CurrentValue.u16);
-			break;
-		}
-	}
 	return PUT_OK;
 }
 
