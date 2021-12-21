@@ -10673,6 +10673,31 @@ _get_PTP_Manufacturer_STR(CONFIG_GET_ARGS) {
 	return GP_OK;
 }
 
+static int
+_get_Canon_EOS_BlockBusy(CONFIG_GET_ARGS) {
+	PTPParams	*params = &camera->pl->params;
+	int val;
+
+	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
+	gp_widget_set_name (*widget, menu->name);
+	val = params->eos_camerastatus_block;
+	if ( (val != 0) || (val != 1)) {
+		val = 1;
+	}
+	gp_widget_set_value  (*widget, &val);
+	return (GP_OK);
+}
+
+static int
+_put_Canon_EOS_BlockBusy(CONFIG_PUT_ARGS) {
+	PTPParams *params = &(camera->pl->params);
+	int val;
+	
+	CR (gp_widget_get_value(widget, &val));
+	params->eos_camerastatus_block = val;
+	return GP_OK;
+}
+
 
 static struct submenu camera_actions_menu[] = {
 	/* { N_("Viewfinder Mode"), "viewfinder", PTP_DPC_CANON_ViewFinderMode, PTP_VENDOR_CANON, PTP_DTC_UINT32, _get_Canon_ViewFinderMode, _put_Canon_ViewFinderMode}, */
@@ -10832,6 +10857,7 @@ static struct submenu camera_settings_menu[] = {
 	{ N_("AF Method"),						  "afmethod", PTP_DPC_CANON_EOS_LvAfSystem,  PTP_VENDOR_CANON,   PTP_DTC_UINT32,  _get_Canon_EOS_AFMethod,     _put_Canon_EOS_AFMethod },
 	{ N_("Remote Mode"),		"remotemode",	PTP_OC_CANON_EOS_SetRemoteMode,  PTP_VENDOR_CANON,   0,  _get_Canon_RemoteMode, _put_Canon_RemoteMode },
 	{ N_("Event Mode"),		"eventmode",	PTP_OC_CANON_EOS_SetEventMode,   PTP_VENDOR_CANON,   0,  _get_Canon_EventMode,  _put_Canon_EventMode },
+	{ N_("Canon EOS Block Update on Busy"), "eosbusyblockupdate", 0, PTP_VENDOR_CANON, 0, _get_Canon_EOS_BlockBusy, _put_Canon_EOS_BlockBusy },
 	{ 0,0,0,0,0,0,0 },
 };
 
@@ -11809,7 +11835,7 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 		ptp_check_eos_events (params);
 		
 		// Check if camera is busy
-		if (params->eos_camerastatus == 1)
+		if ((params->eos_camerastatus == 1) && (params->eos_camerastatus_block == 1))
 			return GP_ERROR_CAMERA_BUSY;
 	}
 
