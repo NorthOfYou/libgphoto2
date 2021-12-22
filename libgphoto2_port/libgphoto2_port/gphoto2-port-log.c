@@ -204,6 +204,9 @@ gp_log_remove_func (int id)
 void
 gp_log_data (const char *domain, const char *data, unsigned int size, const char *format, ...)
 {
+	if (!log_funcs_count)
+		return;
+		
 	va_list args;
 	static const char hexchars[16] = "0123456789abcdef";
 	char *curline, *result = 0, *msg = 0;
