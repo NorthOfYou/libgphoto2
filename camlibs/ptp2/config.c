@@ -405,6 +405,7 @@ camera_prepare_canon_eos_capture(Camera *camera, GPContext *context) {
 skip:
 	C_PTP (ptp_canon_eos_seteventmode(params, 1));
 	params->eos_camerastatus = -1;	/* aka unknown */
+	params->eos_camerastatus_block = 1;
 
 	if (ptp_operation_issupported(params, PTP_OC_CANON_EOS_SetRequestOLCInfoGroup))
 		C_PTP (ptp_canon_eos_setrequestolcinfogroup(params, 0x00001fff));
@@ -10681,9 +10682,7 @@ _get_Canon_EOS_BlockBusy(CONFIG_GET_ARGS) {
 	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
 	gp_widget_set_name (*widget, menu->name);
 	val = params->eos_camerastatus_block;
-	if ( (val != 0) || (val != 1)) {
-		val = 1;
-	}
+	if (val != 0) val = 1;
 	gp_widget_set_value  (*widget, &val);
 	return (GP_OK);
 }
@@ -10692,8 +10691,8 @@ static int
 _put_Canon_EOS_BlockBusy(CONFIG_PUT_ARGS) {
 	PTPParams *params = &(camera->pl->params);
 	int val;
-	
 	CR (gp_widget_get_value(widget, &val));
+	if (val != 0) val = 1;
 	params->eos_camerastatus_block = val;
 	return GP_OK;
 }
@@ -11835,7 +11834,9 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 		ptp_check_eos_events (params);
 		
 		// Check if camera is busy
-		if ((params->eos_camerastatus == 1) && (params->eos_camerastatus_block == 1))
+		printf("eos_camerastatus = %d\n", params->eos_camerastatus);
+		printf("eos_camerastatus_block = %d\n", params->eos_camerastatus_block);
+		if ((params->eos_camerastatus == 1) && (params->eos_camerastatus_block != 0))
 			return GP_ERROR_CAMERA_BUSY;
 	}
 
