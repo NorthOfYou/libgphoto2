@@ -11834,8 +11834,6 @@ _set_config (Camera *camera, const char *confname, CameraWidget *window, GPConte
 		ptp_check_eos_events (params);
 		
 		// Check if camera is busy
-		printf("eos_camerastatus = %d\n", params->eos_camerastatus);
-		printf("eos_camerastatus_block = %d\n", params->eos_camerastatus_block);
 		if ((params->eos_camerastatus == 1) && (params->eos_camerastatus_block != 0))
 			return GP_ERROR_CAMERA_BUSY;
 	}
