@@ -3072,7 +3072,7 @@ static int _parse_Sony_ISO(const char *buf, uint32_t *raw_iso) {
 		// If there's a `+`, it's a High mode for MFNR.
 		noise_reduction = 0x02;
 		buf++;
-	} else if (*buf == "*") {
+	} else if (*buf == '*') {
 		noise_reduction = 0x10;
 		buf++;
 	}
