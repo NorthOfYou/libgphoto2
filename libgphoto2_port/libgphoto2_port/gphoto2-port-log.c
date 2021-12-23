@@ -204,9 +204,6 @@ gp_log_remove_func (int id)
 void
 gp_log_data (const char *domain, const char *data, unsigned int size, const char *format, ...)
 {
-	if (!log_funcs_count)
-		return;
-		
 	va_list args;
 	static const char hexchars[16] = "0123456789abcdef";
 	char *curline, *result = 0, *msg = 0;
@@ -215,6 +212,15 @@ gp_log_data (const char *domain, const char *data, unsigned int size, const char
 	unsigned int index, original_size = size;
 	unsigned char value;
 
+	// Data formatting is expensive, so only perform it if a log_func
+	// is present with level GP_LOG_DATA
+	for(int i=0; i<log_funcs_count; i++) {
+		if (log_funcs[i].level >= GP_LOG_DATA)
+			goto print_log;
+	}
+	return;
+		
+	print_log:
 	va_start (args, format);
 	msg = gpi_vsnprintf(format, args);
 	va_end (args);
