@@ -6090,10 +6090,17 @@ camera_trigger_canon_eos_capture (Camera *camera, GPContext *context)
 
 	// Check camera event queue (necessary to detect if camera is busy)
 	//ptp_check_eos_events (params);
-	
+
 	// Check if camera is busy
-	if (params->eos_camerastatus == 1)
-		return GP_ERROR_CAMERA_BUSY;
+	if (params->eos_camerastatus == 1) {
+    // it may be that the status hasn't been
+    // updated, check events one time
+    // to update the status
+    ptp_check_eos_events (params);
+    // if status is still busy
+    // return busy error
+    if (params->eos_camerastatus == 1)
+      return GP_ERROR_CAMERA_BUSY;
 
 
 	if (ptp_operation_issupported(params, PTP_OC_CANON_EOS_RemoteReleaseOn)) {
