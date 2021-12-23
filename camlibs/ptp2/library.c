@@ -145,6 +145,7 @@ translate_ptp_result (uint16_t result)
 	case PTP_RC_OperationNotSupported:	return GP_ERROR_NOT_SUPPORTED;
 	case PTP_RC_DeviceBusy:			return GP_ERROR_CAMERA_BUSY;
 	case PTP_RC_NIKON_Bulb_Release_Busy: return GP_ERROR_CAMERA_BUSY;
+  case PTP_RC_NIKON_Silent_Release_Busy: return GP_ERROR_CAMERA_BUSY;
 	case PTP_ERROR_NODEVICE:		return GP_ERROR_IO_USB_FIND;
 	case PTP_ERROR_TIMEOUT:			return GP_ERROR_TIMEOUT;
 	case PTP_ERROR_CANCEL:			return GP_ERROR_CANCEL;
