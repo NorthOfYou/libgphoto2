@@ -3454,8 +3454,25 @@ _get_Sony_FNumber(CONFIG_GET_ARGS) {
 	if (dpd->DataType != PTP_DTC_UINT16)
 		return GP_ERROR;
 
-	if (dpd->FormFlag & PTP_DPFF_Enumeration)
-		return _get_FNumber(CONFIG_GET_NAMES);	/* just use the normal code */
+	if (dpd->FormFlag & PTP_DPFF_Enumeration) {
+    // Sony sometimes returns a value
+    // but no choices
+    if (dpd->FORM.Enum.NumberOfValues) {
+      return _get_FNumber(CONFIG_GET_NAMES);	/* just use the normal code */
+    } else {
+      // handle when there's a value but no choices
+      gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
+      gp_widget_set_name (*widget, menu->name);
+
+      char buf[20];
+      sprintf(buf,"f/%g",(dpd->CurrentValue.u16*1.0)/100.0);
+      gp_widget_add_choice (*widget,buf); // add a single choice
+      gp_widget_set_value (*widget,buf);
+
+      GP_LOG_D ("get_Sony_FNumber via single value");
+      return GP_OK;
+    }
+  }
 
 	/* Range */
 	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
