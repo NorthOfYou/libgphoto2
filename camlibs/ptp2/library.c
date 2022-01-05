@@ -6104,63 +6104,14 @@ camera_trigger_canon_eos_capture (Camera *camera, GPContext *context)
   }
 
 	if (ptp_operation_issupported(params, PTP_OC_CANON_EOS_RemoteReleaseOn)) {
-		if (!is_canon_eos_m (params)) {
-			/* Regular EOS */
-			int 			manualfocus = 1, foundfocusinfo = 0;
+		// printf("canon remote release trigger\n");
 
-			// printf("canon remote release trigger\n");
-
-			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseon (params, 3, 1), _("Canon EOS Full-Press failed"));
-			// printf("canon Full Press Success\n");
-			/* no event check between */
-			/* full release now */
-			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseoff (params, 3), _("Canon EOS Full-Release failed"));
-			// printf("canon Full Release Success\n");
-		} else {
-			/* Canon EOS M series */
-			int button = 0, eos_m_focus_done = 0;
-
-			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseon (params, 3, 0), _("Canon EOS M Full-Press failed"));
-			focus_start = time_now();
-			/* check if the capture was successful (the result is reported as a set of OLCInfoChanged events) */
-			do {
-				ptp_check_eos_events (params);
-				while (ptp_get_one_eos_event (params, &entry)) {
-					GP_LOG_D ("entry type %04x", entry.type);
-					if (entry.type == PTP_CANON_EOS_CHANGES_TYPE_UNKNOWN && entry.u.info && sscanf (entry.u.info, "Button %d", &button)) {
-						GP_LOG_D ("Button %d", button);
-						switch (button) {
-							/* Indicates a successful Half-Press(?) on M2, where it
-							 * would precede any other value (unless in MF mode).
-							 * So skip it and look for another button reported */
-							case 2:
-							/* Reported in the self-timer mode during the delay
-							 * period. May be followed by 1, 3 or 4 */
-							case 7:
-								continue;
-							/* Full-Press successful */
-							case 4:
-								eos_m_focus_done = 1;
-								break;
-							/* 3 indicates a Full-Press fail on M2 */
-							/* 1 is a "normal" state, reported after a release.
-								 On M10 also indicates a Full-Press fail */
-							default:
-								eos_m_focus_done = 1;
-								gp_context_error (context, _("Canon EOS M Capture failed: Perhaps no focus?"));
-						}
-						break;
-					}
-				}
-			} while (!eos_m_focus_done && waiting_for_timeout (&back_off_wait, focus_start, 2*1000)); /* wait 2 seconds for focus */
-			/* full release now (even if the press has failed) */
-			C_PTP_REP_MSG (ptp_canon_eos_remotereleaseoff (params, 3), _("Canon EOS M Full-Release failed"));
-			ptp_check_eos_events (params);
-			/* NB: no error is returned in case of button == 7, which means
-			 * the timer is still working, but no AF fail has been reported */
-			if (button < 4)
-				return GP_ERROR;
-		}
+		C_PTP_REP_MSG (ptp_canon_eos_remotereleaseon (params, 3, 1), _("Canon EOS Full-Press failed"));
+		// printf("canon Full Press Success\n");
+		/* no event check between */
+		/* full release now */
+		C_PTP_REP_MSG (ptp_canon_eos_remotereleaseoff (params, 3), _("Canon EOS Full-Release failed"));
+		// printf("canon Full Release Success\n");
 	} else {
 		C_PTP_REP_MSG (ptp_canon_eos_capture (params, &result),
 		 _("Canon EOS Capture failed"));
