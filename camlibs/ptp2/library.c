@@ -6885,27 +6885,7 @@ camera_wait_for_event (Camera *camera, int timeout,
 	
 					//add_object (camera, newobject, context);
 					C_PTP (ptp_object_want (params, newobject, PTPOBJECT_OBJECTINFO_LOADED, &ob));
-					// Log out object info capture and modification timestamps
-					{
-						time_t capture_date;
-						time_t modification_date;
-						char capture_buffer[26];
-						char modification_buffer[26];
-						struct tm* capture_tm_info;
-						struct tm* modification_tm_info;
-						
-						capture_date = ob->oi.CaptureDate;
-						modification_date = ob->oi.CaptureDate;
-
-						capture_tm_info = gmtime(&capture_date);
-						modification_tm_info = gmtime(&modification_date);
-
-						strftime(capture_buffer, 26, "%Y-%m-%d %H:%M:%S", capture_tm_info);
-						strftime(modification_buffer, 26, "%Y-%m-%d %H:%M:%S", modification_tm_info);
-
-						printf("capture_date = %s\n", capture_buffer);
-						printf("modification_date = %s\n", modification_buffer);
-					}
+					
 					C_MEM (path = malloc(sizeof(CameraFilePath)));
 					path->name[sizeof(path->name)-1] = '\0';
 					strncpy  (path->name,  entry.u.object.oi.Filename, sizeof (path->name)-1);
@@ -6914,10 +6894,7 @@ camera_wait_for_event (Camera *camera, int timeout,
 					get_folder_from_handle (camera, entry.u.object.oi.StorageID, entry.u.object.oi.ParentObject, path->folder);
 					/* delete last / or we get confused later. */
 					path->folder[ strlen(path->folder)-1 ] = '\0';
-					//gp_filesystem_append (camera->fs, path->folder, path->name, context);
-					//printf("gp_filesystem_append_fast\n");
 					gp_filesystem_append_fast (camera->fs, path->folder, path->name, context);
-					//printf("add_objectid_and_info\n");
 					add_objectid_and_info (camera, path, context, newobject, &ob->oi);
 					if (entry.u.object.oi.ObjectFormat == PTP_OFC_Association)	/* not sure if we would get folder changed */
 						*eventtype = GP_EVENT_FOLDER_ADDED;
