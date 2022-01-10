@@ -4087,14 +4087,14 @@ get_folder_from_handle (Camera *camera, uint32_t storage, uint32_t handle, char 
 	return (GP_OK);
 }
 
-static int 
+static int
 add_objectid_and_info (Camera* camera, CameraFilePath *path, GPContext *context,
 	uint32_t newobject, PTPObjectInfo *oi) {
 
 	PTPParams			*params = &camera->pl->params;
 	CameraFileInfo		info;
 
-	
+
 	info.ptp_object_handle = newobject;
 	info.file.fields = GP_FILE_INFO_TYPE |
 			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
@@ -4104,6 +4104,8 @@ add_objectid_and_info (Camera* camera, CameraFilePath *path, GPContext *context,
 	info.file.height	= oi->ImagePixHeight;
 	info.file.size		= oi->ObjectCompressedSize;
 	info.file.mtime		= oi->CaptureDate;
+
+  log_mtime(1, oi->CaptureDate, oi->ModificationDate);
 
 	info.preview.fields = GP_FILE_INFO_TYPE |
 			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
@@ -4456,7 +4458,7 @@ capturetriggered:
 				GP_LOG_E ("failed to add objectid and info\n");
 				return ret;
 			}
-			
+
 		}
 	}
 	ptp_check_event (params);
@@ -4636,10 +4638,29 @@ camera_canon_eos_capture (Camera *camera, CameraCaptureType type, CameraFilePath
 	info.file.size		= oi.ObjectCompressedSize;
 	info.file.mtime		= oi.CaptureDate;
 
+  log_mtime(2, oi.CaptureDate, oi.ModificationDate);
+
 	gp_filesystem_set_info_noop(camera->fs, path->folder, path->name, info, context);
 	/* We have now handed over the file, disclaim responsibility by unref. */
 	gp_file_unref (file);
 	return GP_OK;
+}
+
+void
+log_mtime(int loc, time_t capture_date, time_t modification_date)
+{
+  char capture_buffer[26];
+  char modification_buffer[26];
+  struct tm* capture_tm_info;
+  struct tm* modification_tm_info;
+
+  capture_tm_info = gmtime(&capture_date);
+  modification_tm_info = gmtime(&modification_date);
+
+  strftime(capture_buffer, 26, "%Y-%m-%d %H:%M:%S", capture_tm_info);
+  strftime(modification_buffer, 26, "%Y-%m-%d %H:%M:%S", modification_tm_info);
+
+  printf("loc %d: capture_date = %s, modification_date = %s\n", loc, capture_buffer, modification_buffer);
 }
 
 static int
@@ -5588,6 +5609,8 @@ downloadfile:
 		info.file.size		= ob->oi.ObjectCompressedSize;
 		info.file.mtime		= ob->oi.CaptureDate;
 
+    log_mtime(12, ob->oi.CaptureDate, ob->oi.ModificationDate);
+
 		info.preview.fields = GP_FILE_INFO_TYPE |
 				GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
 				GP_FILE_INFO_SIZE;
@@ -5666,6 +5689,8 @@ downloadfile:
 		info.file.height	= ob->oi.ImagePixHeight;
 		info.file.size		= ob->oi.ObjectCompressedSize;
 		info.file.mtime		= ob->oi.CaptureDate;
+
+    log_mtime(4, ob->oi.CaptureDate, ob->oi.ModificationDate);
 
 		info.preview.fields = GP_FILE_INFO_TYPE |
 				GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
@@ -6837,6 +6862,8 @@ camera_wait_for_event (Camera *camera, int timeout,
 					info.file.size		= entry.u.object.oi.ObjectCompressedSize;
 					info.file.mtime		= entry.u.object.oi.CaptureDate;
 
+          log_mtime(5, entry.u.object.oi.CaptureDate, entry.u.object.oi.ModificationDate);
+
 					gp_filesystem_set_info_noop(camera->fs, path->folder, path->name, info, context);
 					*eventtype = GP_EVENT_FILE_ADDED;
 					*eventdata = path;
@@ -6880,12 +6907,12 @@ camera_wait_for_event (Camera *camera, int timeout,
 					}
 
 					printf("New objectinfo! OID 0x%x, name %s\n", (unsigned int)entry.u.object.oid, entry.u.object.oi.Filename);
-					
+
 					newobject = entry.u.object.oid;
-	
+
 					//add_object (camera, newobject, context);
 					C_PTP (ptp_object_want (params, newobject, PTPOBJECT_OBJECTINFO_LOADED, &ob));
-					
+
 					C_MEM (path = malloc(sizeof(CameraFilePath)));
 					path->name[sizeof(path->name)-1] = '\0';
 					strncpy  (path->name,  entry.u.object.oi.Filename, sizeof (path->name)-1);
@@ -7465,6 +7492,8 @@ downloadomdfile:
 			info.file.height	= ob->oi.ImagePixHeight;
 			info.file.size		= ob->oi.ObjectCompressedSize;
 			info.file.mtime		= ob->oi.CaptureDate;
+
+      log_mtime(6, ob->oi.CaptureDate, ob->oi.ModificationDate);
 
 			info.preview.fields = GP_FILE_INFO_TYPE |
 					GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
@@ -8882,12 +8911,12 @@ parse_filename_object_handle (const char *filename, uint32_t *object_handle) {
 	regex_t regex;
 	regmatch_t pmatch[10];
 	char *stopstring;
-	
+
 	res = regcomp(&regex, pattern, REG_EXTENDED);
 	if (res != 0) {
 		return res;
 	}
-	
+
 	res = regexec(&regex, filename, 10, pmatch, 0);
 	if (res != 0) {
 		regfree(&regex);
@@ -9135,6 +9164,10 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	//info.file.mtime     = ob->oi.ModificationDate;
 	info.file.mtime     = ob->oi.CaptureDate;
 
+  log_mtime(7, ob->oi.CaptureDate, ob->oi.ModificationDate);
+
+
+
 	info.preview.fields = GP_FILE_INFO_TYPE |
 			GP_FILE_INFO_WIDTH | GP_FILE_INFO_HEIGHT |
 			GP_FILE_INFO_SIZE;
@@ -9144,11 +9177,16 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	info.preview.size	= ob->oi.ThumbCompressedSize;
 
 	gp_filesystem_set_info_noop(fs, folder, filename, info, context);
-	
-	if (ob->oi.ModificationDate != 0)
-		gp_file_set_mtime (file, ob->oi.ModificationDate);
-	else
-		gp_file_set_mtime (file, ob->oi.CaptureDate);
+
+	if (ob->oi.ModificationDate != 0) {
+    log_mtime(8, ob->oi.CaptureDate, ob->oi.ModificationDate);
+    gp_file_set_mtime (file, ob->oi.ModificationDate);
+  } else {
+    gp_file_set_mtime (file, ob->oi.CaptureDate);
+    log_mtime(9, ob->oi.CaptureDate, ob->oi.ModificationDate);
+  }
+
+
 
 	GP_LOG_D ("Getting file '%s'.", filename);
 	switch (type) {
@@ -9678,7 +9716,7 @@ get_info_func (CameraFilesystem *fs, const char *folder, const char *filename,
 		if (ret != PTP_RC_OK) {
 			oid = PTP_HANDLER_SPECIAL;
 		}
-	} 
+	}
 	else {
 		/* compute storage ID value from folder patch */
 		folder_to_storage(folder,storage);
@@ -9716,6 +9754,8 @@ get_info_func (CameraFilesystem *fs, const char *folder, const char *filename,
 	//} else {
 		info->file.mtime = ob->oi.CaptureDate;
 	//}
+
+  log_mtime(10, ob->oi.CaptureDate, ob->oi.ModificationDate);
 
 	switch (ob->oi.ProtectionStatus) {
 	case PTP_PS_NoProtection:
