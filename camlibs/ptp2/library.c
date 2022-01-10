@@ -4660,7 +4660,8 @@ log_mtime(int loc, time_t capture_date, time_t modification_date)
   strftime(capture_buffer, 26, "%Y-%m-%d %H:%M:%S", capture_tm_info);
   strftime(modification_buffer, 26, "%Y-%m-%d %H:%M:%S", modification_tm_info);
 
-  printf("loc %d: capture_date = %s, modification_date = %s\n", loc, capture_buffer, modification_buffer);
+  printf("loc %d: capture_date = %s (raw: %d), modification_date = %s (raw: %d)\n", loc, capture_buffer, capture_date,
+    modification_buffer, modification_date);
 }
 
 static int
