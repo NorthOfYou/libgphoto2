@@ -9178,11 +9178,13 @@ _put_Nikon_Bulb(CONFIG_PUT_ARGS)
 
 static int
 _get_OpenCapture(CONFIG_GET_ARGS) {
+	PTPParams *params = &(camera->pl->params);
 	int val;
 
 	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
 	gp_widget_set_name (*widget,menu->name);
 	val = 2; /* always changed */
+	//val = params->inliveview;
 	gp_widget_set_value  (*widget, &val);
 	return GP_OK;
 }
@@ -9196,10 +9198,14 @@ _put_OpenCapture(CONFIG_PUT_ARGS)
 
 	CR (gp_widget_get_value(widget, &val));
 	if (val) {
+		//printf("config-set: initiating opencapture\n");
 		C_PTP_REP (ptp_initiateopencapture (params, 0x0, 0x0)); /* so far use only defaults for storage and ofc */
 		params->opencapture_transid = params->transaction_id-1; /* transid will be incremented already */
+		params->inliveview = 1;
 	} else {
+		//printf("config-set: terminating opencapture\n");
 		C_PTP_REP (ptp_terminateopencapture (params, params->opencapture_transid));
+		params->inliveview = 0;
 	}
 	return GP_OK;
 }
@@ -10811,6 +10817,7 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Cancel Canon DSLR Autofocus"),    "cancelautofocus",  0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_AfCancel,          _get_Canon_EOS_AFCancel,        _put_Canon_EOS_AFCancel },
 	{ N_("Drive Olympus OMD Manual focus"), "manualfocusdrive", 0,  PTP_VENDOR_GP_OLYMPUS_OMD, PTP_OC_OLYMPUS_OMD_MFDrive,	_get_Olympus_OMD_MFDrive,	_put_Olympus_OMD_MFDrive },
 	{ N_("Drive Panasonic Manual focus"),   "manualfocusdrive", 0,  PTP_VENDOR_PANASONIC, PTP_OC_PANASONIC_ManualFocusDrive,_get_Panasonic_MFDrive,		_put_Panasonic_MFDrive },
+	{ N_("Drive Fuji Manual focus"),        "manualfocusdrive", PTP_DPC_FUJI_FocusPosition, PTP_VENDOR_FUJI,  PTP_DTC_INT16,_get_INT,                   _put_INT },
 	{ N_("Canon EOS Zoom"),                 "eoszoom",          0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_Zoom,              _get_Canon_EOS_Zoom,            _put_Canon_EOS_Zoom },
 	{ N_("Canon EOS Zoom Position"),        "eoszoomposition",  0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_ZoomPosition,      _get_Canon_EOS_ZoomPosition,    _put_Canon_EOS_ZoomPosition },
 	{ N_("Canon EOS Viewfinder"),           "viewfinder",       0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_GetViewFinderData, _get_Canon_EOS_ViewFinder,      _put_Canon_EOS_ViewFinder },
@@ -10877,6 +10884,7 @@ static struct submenu camera_status_menu[] = {
 	{ N_("Liveview Prohibit Condition"), "liveviewprohibit", PTP_DPC_NIKON_LiveViewProhibitCondition, PTP_VENDOR_NIKON, PTP_DTC_UINT32, _get_Nikon_LiveViewProhibitCondition, _put_None },
 	{ N_("Device Ready Status"), "deviceready", 				PTP_OC_NIKON_DeviceReady, PTP_VENDOR_NIKON, PTP_DTC_UINT16, _get_Nikon_DeviceReady, _put_None },
 	{ N_("Objects in Memory"),      "objectsinmemory",  PTP_DPC_SONY_ObjectInMemory,            PTP_VENDOR_SONY,    PTP_DTC_UINT16, _get_Sony_ObjectsInMemory,   _put_None},
+	{ N_("Available Shots"),        "availableshots",   PTP_DPC_FUJI_FreeSDRAMImages,           PTP_VENDOR_FUJI,    PTP_DTC_UINT16, _get_INT,                    _put_None },
 	{ 0,0,0,0,0,0,0 },
 };
 

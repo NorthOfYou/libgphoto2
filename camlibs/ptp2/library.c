@@ -412,7 +412,7 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 	}
 
 	if (di->VendorExtensionID == PTP_VENDOR_FUJI) {
-		C_MEM (di->DevicePropertiesSupported = realloc(di->DevicePropertiesSupported,sizeof(di->DevicePropertiesSupported[0])*(di->DevicePropertiesSupported_len + 60)));
+		C_MEM (di->DevicePropertiesSupported = realloc(di->DevicePropertiesSupported,sizeof(di->DevicePropertiesSupported[0])*(di->DevicePropertiesSupported_len + 61)));
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+0] = PTP_DPC_ExposureTime;
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+1] = PTP_DPC_FNumber;
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+2] = 0xd38c;	/* PC Mode */
@@ -473,7 +473,8 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+57] = 0xd38d; /* seen on xt3 */
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+58] = 0xd38e; /* seen on xt3 */
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+59] = 0xd17b; /* seen on xt3 */
-		di->DevicePropertiesSupported_len += 60;
+		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+60] = PTP_DPC_ExposureBiasCompensation;
+		di->DevicePropertiesSupported_len += 61;
 
 		if (ptp_operation_issupported(&camera->pl->params, PTP_OC_FUJI_GetDeviceInfo)) {
 			uint16_t	*props;
@@ -3872,6 +3873,21 @@ enable_liveview:
 			return GP_OK;
 		}
 
+		if (!params->inliveview) {
+			//printf("FUJI: activating opencapture for preview\n");
+			tries = 5;
+			while (tries--) {
+				ret = ptp_initiateopencapture(params, 0x00000000, 0x00000000);
+				if (ret == PTP_RC_OK) {
+					params->opencapture_transid = params->transaction_id-1;
+					params->inliveview = 1;
+					break;
+				}
+			}
+			C_PTP_REP (ret);
+		}
+
+		tries = 5;
 		while (tries--) {
 			ret = ptp_getobjectinfo (params, preview_object, &oi);
 			if (ret == PTP_RC_OK) {
@@ -3881,27 +3897,32 @@ enable_liveview:
 			if (ret == PTP_RC_InvalidObjectHandle) {
 				/* 1000 x 10 tries was not enough for the S10 ... make the wait a bit longer
 				 * see https://github.com/gphoto/libgphoto2/issues/603 */
-				usleep(5*1000);
+				usleep(1000);
 				continue;
 			}
 			C_PTP_REP (ret);
 		}
+		// ret = ptp_getobjectinfo (params, preview_object, &oi);
+		// if (ret == PTP_RC_OK) {
+	 	// 	ptp_free_objectinfo(&oi);		 	
+		// }
+		// C_PTP_REP (ret);
 
-		if(ret != PTP_RC_OK) {
-			tries = 5;
-			while (tries--) {
-				ret = ptp_initiateopencapture(params, 0x00000000, 0x00000000);
-				if (ret == PTP_RC_OK) {
-					params->opencapture_transid = params->transaction_id-1;
-					params->inliveview = 1;
-					usleep(100*1000); /* this basically waits until the first object is there. */
-					break;
-				}
-				usleep(200*1000);
-			}
-		}
+		// if(ret != PTP_RC_OK) {
+		// 	tries = 5;
+		// 	while (tries--) {
+		// 		ret = ptp_initiateopencapture(params, 0x00000000, 0x00000000);
+		// 		if (ret == PTP_RC_OK) {
+		// 			params->opencapture_transid = params->transaction_id-1;
+		// 			params->inliveview = 1;
+		// 			usleep(100*1000); /* this basically waits until the first object is there. */
+		// 			break;
+		// 		}
+		// 		usleep(200*1000);
+		// 	}
+		// }
 
-		tries = 20;
+		tries = 5;
 		do {
 			ret = ptp_getobject_with_size(params, preview_object, &ximage, &size);
 			if (ret == PTP_RC_OK)
@@ -3915,6 +3936,8 @@ enable_liveview:
 				C_PTP (ret);
 		} while (tries--);
 		C_PTP_REP (ptp_deleteobject(params, preview_object, 0));
+		//C_PTP_REP (ptp_terminateopencapture(params, params->opencapture_transid));
+		//params->inliveview = 0;
 
 		/* Fuji Liveview returns FF D8 ... FF D9 ... so no meta data wrapped around the jpeg data */
 		gp_file_append (file, (char*)ximage, size);
@@ -7294,6 +7317,7 @@ sonyout:
 	if (	(params->deviceinfo.VendorExtensionID == PTP_VENDOR_FUJI) &&
 		ptp_property_issupported(params, PTP_DPC_FUJI_CurrentState)
 	) {
+		
 		/* current strategy ... as the camera (currently) does not send us ObjectAdded events for some reason...
 		 * we just synthesize them for the generic PTP event handler code */
 		do {
@@ -7301,21 +7325,28 @@ sonyout:
 			unsigned int		i;
 			PTPObject		*oi;
 
+			//C_PTP_REP (ptp_check_event(params));
+
 			if (ptp_get_one_event (params, &event))
 				goto handleregular;
-			C_PTP (ptp_getobjecthandles (params, PTP_HANDLER_SPECIAL, 0x000000, 0x000000, &handles));
-			for (i=handles.n;i--;) {
-				if (params->inliveview == 1 && handles.Handler[i] == 0x80000001) /* Ignore preview image object handle while liveview is active */
-					continue;
-				if (PTP_RC_OK == ptp_object_find (params, handles.Handler[i], &oi)) /* already have it */
-					continue;
-				event.Code = PTP_EC_ObjectAdded;
-				event.Param1 = handles.Handler[i];
+			
+			if (PTP_RC_OK == LOG_ON_PTP_E(ptp_getobjecthandles (params, PTP_HANDLER_SPECIAL, 0x000000, 0x000000, &handles))) {
+				for (i=handles.n;i--;) {
+					if (params->inliveview == 1 && handles.Handler[i] == 0x80000001) /* Ignore preview image object handle while liveview is active */
+						continue;
+					if (PTP_RC_OK == ptp_object_find (params, handles.Handler[i], &oi)) /* already have it */
+						continue;
+					event.Code = PTP_EC_ObjectAdded;
+					event.Param1 = handles.Handler[i];
+					ptp_add_event(params, &event);
+					//free (handles.Handler);
+					//goto handleregular;
+				}
 				free (handles.Handler);
-				goto handleregular;
 			}
-			free (handles.Handler);
-			C_PTP_REP (ptp_check_event(params));
+			
+			//C_PTP_REP (ptp_check_event(params));
+			ptp_check_event(params);
 		} while (waiting_for_timeout (&back_off_wait, event_start, timeout));
 		*eventtype = GP_EVENT_TIMEOUT;
 		return GP_OK;
@@ -9287,7 +9318,8 @@ get_file_func (CameraFilesystem *fs, const char *folder, const char *filename,
 		/* We also need this for Nikon D850 and very big RAWs (>40 MB) */
 		/* Try the generic method first, EOS R does not like the second for some reason */
 		if (	(ptp_operation_issupported(params,PTP_OC_GetPartialObject)) &&
-			(size > BLOBSIZE) && (size <= 0xffffffffUL)
+			(size > BLOBSIZE) && (size <= 0xffffffffUL) &&
+			(params->deviceinfo.VendorExtensionID != PTP_VENDOR_FUJI)
 		) {
 				unsigned char	*ximage = NULL;
 				uint32_t 	offset = 0;

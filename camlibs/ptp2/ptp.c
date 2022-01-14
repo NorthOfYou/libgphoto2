@@ -2224,6 +2224,15 @@ ptp_getobjectinfo (PTPParams* params, uint32_t handle,
 	CHECK_PTP_RC(ptp_transaction(params, &ptp, PTP_DP_GETDATA, 0, &data, &size));
 	ptp_unpack_OI(params, data, objectinfo, size);
 	free(data);
+
+	//printf("objectinfo: name=%s, association_type=0x%04x, association_desc=0x%04x\n", objectinfo->Filename, objectinfo->AssociationType, objectinfo->AssociationDesc);
+	if ( (params->deviceinfo.VendorExtensionID == PTP_VENDOR_FUJI) &&
+		 (objectinfo->AssociationType != 0) &&
+		 (strchr(objectinfo->Filename, '.') != NULL)
+	) {
+		//printf("Patching FUJI file association-type\n");
+		objectinfo->AssociationType = 0;
+	}
 	return PTP_RC_OK;
 }
 
@@ -3591,11 +3600,15 @@ ptp_check_event (PTPParams *params)
 store_event:
 	if (ret == PTP_RC_OK) {
 		ptp_debug (params, "event: nparams=0x%X, code=0x%X, trans_id=0x%X, p1=0x%X, p2=0x%X, p3=0x%X", event.Nparam,event.Code,event.Transaction_ID, event.Param1, event.Param2, event.Param3);
-		ptp_add_event (params, &event);
+		if ( (params->deviceinfo.VendorExtensionID == PTP_VENDOR_FUJI) && 
+		    (event.Code == PTP_EC_ObjectAdded) ) 
+			{
+				GP_LOG_D ("dropping fuji ObjectAdded event");
+			} else {
+				ptp_add_event (params, &event);
 
-		handle_event_internal (params, &event);
-
-
+				handle_event_internal (params, &event);
+			}
 	}
 	if (ret == PTP_ERROR_TIMEOUT) /* ok, just new events */
 		ret = PTP_RC_OK;
