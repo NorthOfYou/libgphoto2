@@ -8655,6 +8655,8 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 	if (!ptp_operation_issupported(params, PTP_OC_NIKON_StartLiveView))
 		return GP_ERROR_NOT_SUPPORTED;
 
+	C_PTP_REP (ptp_nikon_device_ready(params));
+
 	CR (gp_widget_get_value (widget, &val));
 	if (val) {
 		PTPPropertyValue	value;
@@ -8690,7 +8692,7 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 			}
 		}
 
-                if (!value.u8) {
+		if (!value.u8) {
 			value.u8 = 1;
 			LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_RecordingMedia, &value, PTP_DTC_UINT8));
 			C_PTP_REP_MSG (ptp_nikon_start_liveview (params),
@@ -8701,6 +8703,10 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 		}
 	} else {
 		if (ptp_operation_issupported(params, PTP_OC_NIKON_EndLiveView)) {
+			// busy check here needed for some nikons to
+			// prevent bad camera state
+			C_PTP_REP (ptp_nikon_device_ready(params));
+
 			uint16_t res = ptp_nikon_end_liveview (params);
 			// printf("Live view end code: %d\n", res);
 			if (res == 0xa004) {
