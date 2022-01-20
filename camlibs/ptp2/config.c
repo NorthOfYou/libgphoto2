@@ -8977,6 +8977,26 @@ _get_Nikon_LiveViewProhibitCondition(CONFIG_GET_ARGS) {
 	return GP_OK;
 }
 
+static int
+_get_Nikon_DeviceReady(CONFIG_GET_ARGS) {
+	PTPParams	*params = &(camera->pl->params);
+	GPContext *context = ((PTPData *) params->data)->context;
+	int ret;
+	int	val;
+
+	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
+	gp_widget_set_name (*widget, menu->name);
+
+	ret = ptp_nikon_device_ready (params);
+	if (ret == PTP_RC_OK) {
+		val = 1;
+	} else {
+		val = 0;
+	}
+
+	gp_widget_set_value (*widget, &val);
+	return GP_OK;
+}
 
 static int
 _get_Nikon_Movie(CONFIG_GET_ARGS) {
@@ -10810,6 +10830,7 @@ static struct submenu camera_status_menu[] = {
 	{ N_("Movie Switch"),	        "eosmovieswitch",   PTP_DPC_CANON_EOS_FixedMovie,           PTP_VENDOR_CANON,   PTP_DTC_UINT32, _get_INT,                       _put_None },
 	{ N_("Movie Prohibit Condition"), "movieprohibit",  PTP_DPC_NIKON_MovRecProhibitCondition,  PTP_VENDOR_NIKON,   PTP_DTC_UINT32, _get_Nikon_MovieProhibitCondition, _put_None },
 	{ N_("Liveview Prohibit Condition"), "liveviewprohibit", PTP_DPC_NIKON_LiveViewProhibitCondition, PTP_VENDOR_NIKON, PTP_DTC_UINT32, _get_Nikon_LiveViewProhibitCondition, _put_None },
+	{ N_("Device Ready Status"), "deviceready", 				PTP_OC_NIKON_DeviceReady, PTP_VENDOR_NIKON, PTP_DTC_UINT16, _get_Nikon_DeviceReady, _put_None },
 	{ N_("Objects in Memory"),      "objectsinmemory",  PTP_DPC_SONY_ObjectInMemory,            PTP_VENDOR_SONY,    PTP_DTC_UINT16, _get_Sony_ObjectsInMemory,   _put_None},
 	{ 0,0,0,0,0,0,0 },
 };
