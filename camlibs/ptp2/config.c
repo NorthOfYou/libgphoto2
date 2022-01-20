@@ -6571,6 +6571,10 @@ GENERIC16TABLE(Canon_BracketMode,canon_bracketmode)
 static struct deviceproptableu16 canon_aperture[] = {
 	{ N_("implicit auto"),	0x0, 0 },
 	{ N_("auto"),	0xffff, 0 },
+	{ N_("auto"),	0x00b0, 0 }, /* eos R Intelligent Auto */
+	{ N_("auto"),	0x00ff, 0 }, /* eos R FV mode */
+	{ N_("1.8"),	0x000e, 0 }, /* eos R AV mode, push below min aperture THIS IS AN EOS R* bug */
+	{ N_("4"),	0x0021, 0 },   /* eos R AV mode, push below min aperture on 24-105 lens THIS IS AN EOS R* bug */
 	{ "1",		0x0008, 0 },
 	{ "1.1",	0x000b, 0 },
 	{ "1.2",	0x000c, 0 },
