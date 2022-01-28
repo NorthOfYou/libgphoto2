@@ -9248,8 +9248,8 @@ _put_Sony_AF_Area_Position(CONFIG_PUT_ARGS) {
 
 	C_PARAMS (2 == sscanf(val, "%dx%d", &x, &y));
 
-	htod16a(packed,x);
-	htod16a(packed+2,y);
+	htod16a(packed,y);
+	htod16a(packed+2,x);
 	propval->u32 = *(uint32_t*)packed;
 
 	//printf("AF_Area_Position x=%d, y=%d\n", x, y);
@@ -9261,7 +9261,31 @@ _put_Sony_AF_Area_Position(CONFIG_PUT_ARGS) {
 	return PUT_OK;
 }
 
-static struct deviceproptableu16 sony_focus_area[] = {
+static int
+_put_Sony_200_AF_Area_Position(CONFIG_PUT_ARGS) {
+	char *val;
+	int x,y;
+	uint8_t packed[4];
+	PTPParams *params = &(camera->pl->params);
+
+	CR (gp_widget_get_value(widget, &val));
+
+	C_PARAMS (2 == sscanf(val, "%dx%d", &x, &y));
+
+	htod16a(packed,y);
+	htod16a(packed+2,x);
+	propval->u32 = *(uint32_t*)packed;
+
+	// printf("AF_Area_Position x=%d, y=%d\n", x, y);
+	// printf("packed coord:\n");
+	// dump_hex(stdout, packed, 4);
+
+	C_PTP (ptp_sony_setdevicecontrolvaluea (params, PTP_DPC_SONY_200_AF_Area_Position, propval, PTP_DTC_UINT32));
+
+	return PUT_OK;
+}
+
+static struct deviceproptableu8 sony_focus_area[] = {
 	{ N_("Wide"),        0x0001, 0 },
 	{ N_("Zone"),        0x0002, 0 },
 	{ N_("Center"),      0x0003, 0 },
@@ -9272,6 +9296,13 @@ static struct deviceproptableu16 sony_focus_area[] = {
 };
 
 GENERIC16TABLE(Sony_FocusArea, sony_focus_area)
+
+static struct deviceproptableu16 sony_exposure_preview[] = {
+	{ N_("On"),         0x01, 0 },
+	{ N_("Off"),        0x02, 0 }
+};
+
+GENERIC8TABLE(Sony_ExposurePreview, sony_exposure_preview)
 
 static int
 _get_Sony_FocusStatus(CONFIG_GET_ARGS) {
@@ -10754,8 +10785,10 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Manual-Focus"),                   "manualfocus",      PTP_DPC_SONY_NearFar,   PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_ManualFocus,          _put_Sony_ManualFocus },
 	{ N_("Auto-Focus"),                     "autofocus",        PTP_DPC_SONY_AutoFocus, PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_Autofocus,            _put_Sony_Autofocus },
 	{ N_("Set Sony AF-Area"),               "changeafarea",     PTP_DPC_SONY_AF_Area_Position, PTP_VENDOR_SONY, PTP_DTC_UINT32, _get_Sony_AF_Area_Position, _put_Sony_AF_Area_Position },
+	{ N_("Set Sony AF-Area (200 Series)"),  "changeafarea",     PTP_DPC_SONY_200_AF_Area_Position, PTP_VENDOR_SONY, PTP_DTC_UINT32, _get_Sony_AF_Area_Position, _put_Sony_200_AF_Area_Position },
 	{ N_("Capture"),                        "capture",          PTP_DPC_SONY_Capture,   PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_Capture,              _put_Sony_Capture },
 	{ N_("Focus Area"),                     "focusarea",        PTP_DPC_SONY_FocusArea, PTP_VENDOR_SONY,   PTP_DTC_UINT16,  _get_Sony_FocusArea,            _put_Sony_FocusArea },
+	{ N_("Exposure Preview"),               "exposurepreview",  PTP_DPC_SONY_LiveDisplayEffect, PTP_VENDOR_SONY,   PTP_DTC_UINT8, _get_Sony_ExposurePreview,     _put_Sony_ExposurePreview },
 	{ N_("Focus Status"),                   "focusstatus",      PTP_DPC_SONY_FocusFound, PTP_VENDOR_SONY,  PTP_DTC_UINT8,   _get_Sony_FocusStatus,          _put_None },
 	{ N_("Power Down"),                     "powerdown",        0,  0,                  PTP_OC_PowerDown,                   _get_PowerDown,                 _put_PowerDown },
 	{ N_("Focus Lock"),                     "focuslock",        0,  PTP_VENDOR_CANON,   PTP_OC_CANON_FocusLock,             _get_Canon_FocusLock,           _put_Canon_FocusLock },

@@ -3087,9 +3087,8 @@ typedef struct _PTPCanonEOSDeviceInfo {
 #define PTP_DPC_SONY_StillImageStoreDestination		0xD222  /* (type=0x4) Enumeration [1,17,16] value: 17 */
 /* guessed DPC_SONY_DateTimeSettings 0xD223  error on query */
 /* guessed DPC_SONY_FocusArea 0xD22C  (type=0x4) Enumeration [1,2,3,257,258,259,260,513,514,515,516,517,518,519,261,520] value: 1 */
-/* guessed DPC_SONY_LiveDisplayEffect 0xD231 (type=0x2) Enumeration [1,2] value: 1 */
+#define PTP_DPC_SONY_LiveDisplayEffect 0xD231 /* (type=0x2) Enumeration [1,2] value: 1 */
 /* guessed DPC_SONY_FileType 0xD235  (enum: 0,1) */
-/* guessed DPC_SONY_JpegQuality 0xD252 */
 /* d255 reserved 5 */
 /* d254 reserved 4 */
 #define PTP_DPC_SONY_FocusArea 0xD22C
@@ -3118,6 +3117,7 @@ typedef struct _PTPCanonEOSDeviceInfo {
 #define PTP_DPC_SONY_FocusDriveMode				0xD2D2
 
 #define PTP_DPC_SONY_AF_Area_Position			0xD2DC
+#define PTP_DPC_SONY_200_AF_Area_Position			0xD232
 
 /* Sony QX properties */
 /* all for 96f8 Control Device */

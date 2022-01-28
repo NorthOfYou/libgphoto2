@@ -4778,7 +4778,7 @@ ptp_generic_getdevicepropdesc (PTPParams *params, uint16_t propcode, PTPDevicePr
 				dpd->FORM.Range.MinimumValue.i16 = -7;
 				dpd->FORM.Range.StepSize.i16 = 1;
 				return PTP_RC_OK;
-			} 
+			}
 			if (mode_300 && (propcode == PTP_DPC_SONY_AutoFocus)) {
 				dpd->DevicePropertyCode = PTP_DPC_SONY_AutoFocus;
 				dpd->DataType = PTP_DTC_UINT16;
@@ -7501,6 +7501,7 @@ ptp_get_property_description(PTPParams* params, uint16_t dpc)
 		{PTP_DPC_SONY_ISO2, N_("ISO")},				/* 0xD226 */
 		{PTP_DPC_SONY_ShutterSpeed2, N_("Shutter speed")},	/* 0xD229 */
 		{PTP_DPC_SONY_FocusArea, N_("Focus Area")},
+		{PTP_DPC_SONY_LiveDisplayEffect, N_("Exposure Preview")}, /* 0xD213 */
 		{PTP_DPC_SONY_Movie, N_("Movie")},			/* 0xD2C8 */
 		{PTP_DPC_SONY_StillImage, N_("Still Image")},		/* 0xD2C7 */
 		{PTP_DPC_SONY_SensorCrop, N_("Sensor Crop")},
