@@ -9285,7 +9285,7 @@ _put_Sony_200_AF_Area_Position(CONFIG_PUT_ARGS) {
 	return PUT_OK;
 }
 
-static struct deviceproptableu8 sony_focus_area[] = {
+static struct deviceproptableu16 sony_focus_area[] = {
 	{ N_("Wide"),        0x0001, 0 },
 	{ N_("Zone"),        0x0002, 0 },
 	{ N_("Center"),      0x0003, 0 },
@@ -11082,7 +11082,7 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("HDR Mode"),                       "hdrmode",                  PTP_DPC_NIKON_HDRMode,                  PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("HDR High Dynamic"),               "hdrhighdynamic",           PTP_DPC_NIKON_HDRHighDynamic,           PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_HDRHighDynamic,          _put_Nikon_HDRHighDynamic },
 	{ N_("HDR Smoothing"),                  "hdrsmoothing",             PTP_DPC_NIKON_HDRSmoothing,             PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_HDRSmoothing,            _put_Nikon_HDRSmoothing },
-	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_StillCaptureMode,               PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_300_CaptureMode,          _put_Sony_300_CaptureMode },
+	{ N_("Still Capture Mode (300)"),       "capturemode",              PTP_DPC_StillCaptureMode,               PTP_VENDOR_SONY,    PTP_DTC_UINT32, _get_Sony_300_CaptureMode,          _put_Sony_300_CaptureMode },
 	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_StillCaptureMode,               0,                  PTP_DTC_UINT16, _get_CaptureMode,                   _put_CaptureMode },
 	{ N_("Still Capture Mode"),             "capturemode",              PTP_DPC_FUJI_ReleaseMode,               PTP_VENDOR_FUJI,    PTP_DTC_UINT16, _get_Fuji_ReleaseMode,              _put_Fuji_ReleaseMode },
 	{ N_("Canon Shooting Mode"),            "shootingmode",             PTP_DPC_CANON_ShootingMode,             PTP_VENDOR_CANON,   PTP_DTC_UINT8,  _get_Canon_ShootMode,               _put_Canon_ShootMode },
