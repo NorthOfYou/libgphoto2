@@ -7317,9 +7317,11 @@ static struct deviceproptableu8 sony_300_compression[] = {
 GENERIC8TABLE(Sony_300_CompressionSetting,sony_300_compression)
 
 static struct deviceproptableu8 sony_300_jpegcompression[] = {
+	{ N_("n/a"),         0x00, PTP_VENDOR_SONY },
 	{ N_("X.Fine"),      0x01, PTP_VENDOR_SONY },
 	{ N_("Fine"),        0x02, PTP_VENDOR_SONY },
 	{ N_("Std"),         0x03, PTP_VENDOR_SONY },
+	{ N_("Light"),       0x04, PTP_VENDOR_SONY },
 };
 GENERIC8TABLE(Sony_300_JpegCompressionSetting,sony_300_jpegcompression)
 
