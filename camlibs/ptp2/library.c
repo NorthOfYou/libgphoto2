@@ -7223,10 +7223,10 @@ downloadnow:
 				}
 				if (oi.ObjectFormat != PTP_OFC_EXIF_JPEG) {
 					GP_LOG_D ("raw? ofc is 0x%04x, name is %s", oi.ObjectFormat,oi.Filename);
-					sprintf (path->name, "sony_capt%04d.arw", params->capcnt++);
+					sprintf (path->name, oi.Filename);
 					gp_file_set_mime_type (file, "image/x-sony-arw"); /* FIXME */
 				} else {
-					sprintf (path->name, "sony_capt%04d.jpg", params->capcnt++);
+					sprintf (path->name, oi.Filename);
 					gp_file_set_mime_type (file, GP_MIME_JPEG);
 				}
 				gp_file_set_mtime (file, time(NULL));
