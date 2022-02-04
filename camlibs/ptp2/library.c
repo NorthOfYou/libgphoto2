@@ -418,7 +418,7 @@ fixup_cached_deviceinfo (Camera *camera, PTPDeviceInfo *di) {
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+2] = 0xd38c;	/* PC Mode */
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+3] = 0xd171;	/* Focus control */
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+4] = 0xd21c;	/* Needed for X-T2? */
-		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+5] = 0xd347;	/* Focus Position */
+		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+5] = PTP_DPC_FUJI_FocusPoint; //0xd347;	/* Focus Position */
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+6] = PTP_DPC_FUJI_LensZoomPos;
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+7] = 0xd242;
 		di->DevicePropertiesSupported[di->DevicePropertiesSupported_len+8] = PTP_DPC_FUJI_LiveViewImageSize; /* xt3 confirmed */
@@ -3854,6 +3854,7 @@ enable_liveview:
 		uint32_t	preview_object = 0x80000001; /* this is where the liveview image is accessed */
 		unsigned char	*ximage = NULL;
 		int		tries = 10;
+		int     initiated_capture = 0;
 
 		if (params->jpgfd) {
 			unsigned int i;
@@ -3879,14 +3880,16 @@ enable_liveview:
 			while (tries--) {
 				ret = ptp_initiateopencapture(params, 0x00000000, 0x00000000);
 				if (ret == PTP_RC_OK) {
+					initiated_capture = 1;
 					params->opencapture_transid = params->transaction_id-1;
 					params->inliveview = 1;
 					break;
+				} else if (ret == PTP_RC_DeviceBusy) {
+					C_PTP_REP (ptp_terminateopencapture(params, params->transaction_id));
 				}
 			}
 			C_PTP_REP (ret);
 		}
-
 		tries = 5;
 		while (tries--) {
 			ret = ptp_getobjectinfo (params, preview_object, &oi);
@@ -3936,8 +3939,10 @@ enable_liveview:
 				C_PTP (ret);
 		} while (tries--);
 		C_PTP_REP (ptp_deleteobject(params, preview_object, 0));
-		//C_PTP_REP (ptp_terminateopencapture(params, params->opencapture_transid));
-		//params->inliveview = 0;
+		// if (initiated_capture) {
+		// 	C_PTP_REP (ptp_terminateopencapture(params, params->opencapture_transid));
+		// 	params->inliveview = 0;
+		// }
 
 		/* Fuji Liveview returns FF D8 ... FF D9 ... so no meta data wrapped around the jpeg data */
 		gp_file_append (file, (char*)ximage, size);

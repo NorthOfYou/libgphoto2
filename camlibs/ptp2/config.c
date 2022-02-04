@@ -2928,9 +2928,85 @@ _put_Fuji_AFDrive(CONFIG_PUT_ARGS)
 	PTPParams		*params = &(camera->pl->params);
 	GPContext		*context = ((PTPData *) params->data)->context;
 	PTPPropertyValue	pval;
+	uint16_t        af_start_code;
+	uint16_t        af_stop_code;
+	int ret;
+
+	// get the focus mode
+	C_PTP_REP (ptp_getdevicepropvalue (params, PTP_DPC_FocusMode, &pval, PTP_DTC_UINT16));
+	
+	// manual-focus mode
+	if (pval.u16 == 0x0001) {
+		af_start_code = 0xA000; 
+		af_stop_code = 0x0006; 
+	// otherwise in one of the auto-focus modes
+	} else {
+		//printf("deviceinfo.Model: %s\n", params->deviceinfo.Model);
+		if (!strcmp(params->deviceinfo.Model, "X-Pro2")) {
+			af_start_code = 0x9100; 
+			af_stop_code = 0x0001; 
+		} else {
+			af_start_code = 0x9300; 
+			af_stop_code = 0x0005;	
+		}
+	}
+	//printf("af_start_code: %04x\n", af_start_code);
+	//printf("af_stop_code: %04x\n", af_stop_code);
+
 
 	/* Focusing first ... */
-	pval.u16 = 0x9300;
+	pval.u16 = af_start_code;
+	C_PTP_REP (ptp_setdevicepropvalue (params, 0xd208, &pval, PTP_DTC_UINT16));
+	C_PTP_REP (ptp_initiatecapture(params, 0x00000000, 0x00000000));
+
+	if(!strcmp(params->deviceinfo.Model, "X-Pro2")) {
+		goto release_focus_lock;
+	}
+
+	/* poll camera until it is ready */
+	pval.u16 = 0x0001;
+	while (pval.u16 == 0x0001) {
+		C_PTP (ptp_getdevicepropvalue (params, PTP_DPC_FUJI_AFStatus, &pval, PTP_DTC_UINT16));
+		GP_LOG_D ("XXX Ready to shoot? %X", pval.u16);
+	}
+
+	/* 2 - means OK apparently, 3 - means failed and initiatecapture will get busy. */
+	if (pval.u16 == 3) { /* reported on out of focus */
+		gp_context_error (context, _("Fuji Capture failed: Perhaps no auto-focus?"));
+		ret = GP_ERROR;
+	} else {
+		ret = GP_OK;
+	}
+
+	release_focus_lock:
+	/* release focus lock */
+	pval.u16 = af_stop_code;
+	C_PTP_REP (ptp_setdevicepropvalue (params, 0xd208, &pval, PTP_DTC_UINT16));
+	C_PTP_REP (ptp_initiatecapture(params, 0x00000000, 0x00000000));
+	return ret;
+}
+
+static int
+_get_Fuji_AFDriveManual(CONFIG_GET_ARGS) {
+	int val;
+
+	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
+	gp_widget_set_name (*widget,menu->name);
+	val = 2; /* always changed */
+	gp_widget_set_value  (*widget, &val);
+	return GP_OK;
+}
+
+static int
+_put_Fuji_AFDriveManual(CONFIG_PUT_ARGS)
+{
+	PTPParams		*params = &(camera->pl->params);
+	GPContext		*context = ((PTPData *) params->data)->context;
+	PTPPropertyValue	pval;
+	int ret;
+
+	/* Focusing first ... */
+	pval.u16 = 0xA000;
 	C_PTP_REP (ptp_setdevicepropvalue (params, 0xd208, &pval, PTP_DTC_UINT16));
 	C_PTP_REP (ptp_initiatecapture(params, 0x00000000, 0x00000000));
 
@@ -2944,15 +3020,56 @@ _put_Fuji_AFDrive(CONFIG_PUT_ARGS)
 	/* 2 - means OK apparently, 3 - means failed and initiatecapture will get busy. */
 	if (pval.u16 == 3) { /* reported on out of focus */
 		gp_context_error (context, _("Fuji Capture failed: Perhaps no auto-focus?"));
-		return GP_ERROR;
+		ret = GP_ERROR;
+	} else {
+		ret = GP_OK;
 	}
 
 	/* release focus lock */
-
-	pval.u16 = 0x0005;
+	pval.u16 = 0x0006;
 	C_PTP_REP (ptp_setdevicepropvalue (params, 0xd208, &pval, PTP_DTC_UINT16));
 	C_PTP_REP (ptp_initiatecapture(params, 0x00000000, 0x00000000));
+	return ret;
+}
+
+static struct deviceproptableu16 fuji_focuspoints[] = {
+	{ N_("91 Points (7x13)"),   0x0001, 0 },
+	{ N_("325 Points (13x25)"), 0x0002, 0 },
+	{ N_("117 Points (9x13)"),  0x0003, 0 },
+	{ N_("425 Points (17x25)"), 0x0004, 0 },
+};
+GENERIC16TABLE(Fuji_FocusPoints,fuji_focuspoints)
+
+static int
+_get_Fuji_FocusPoint(CONFIG_GET_ARGS) {
+	PTPParams *params = &(camera->pl->params);
+	GPContext *context = ((PTPData *) params->data)->context;
+	char *focus_point;
+
+	C_PTP_REP(ptp_getdevicepropvalue(params, PTP_DPC_FUJI_FocusPoint, &focus_point, PTP_DTC_STR));
+	gp_widget_new (GP_WIDGET_TEXT, _(menu->label), widget);
+	gp_widget_set_name (*widget,menu->name);
+	gp_widget_set_value (*widget, focus_point);
+	free(focus_point);
+
 	return GP_OK;
+}
+
+static int
+_put_Fuji_FocusPoint(CONFIG_PUT_ARGS) {
+	//printf("_put_Fuji_FocusPoint\n");
+	PTPParams *params = &(camera->pl->params);
+	GPContext *context = ((PTPData *) params->data)->context;
+	PTPPropertyValue pval;
+	char *focus_point;
+
+	CR (gp_widget_get_value(widget, &focus_point));
+	//printf("focus_point: %s\n", focus_point);
+	C_MEM (pval.str = strdup(focus_point));
+	//printf("pval.str: %s\n", pval.str);
+	//printf("calling ptp_setdevicepropvalue\n");
+	C_PTP_REP(ptp_setdevicepropvalue(params, PTP_DPC_FUJI_FocusArea4, &pval, PTP_DTC_STR));
+	return PUT_OK;
 }
 
 static int
@@ -6241,12 +6358,12 @@ GENERICI16TABLE(Fuji_ShutterSpeed,fuji_shutterspeed)
 
 static struct deviceproptableu32 fuji_new_shutterspeed[] = {
 	{ N_("bulb"),	0xffffffff, 0 },
-	{ "60m",	64000180, 0 },
-	{ "30m",	64000150, 0 },
-	{ "15m",	64000120, 0 },
-	{ "8m",		64000090, 0 },
-	{ "4m",		64000060, 0 },
-	{ "2m",		64000030, 0 },
+	{ "3600s",	64000180, 0 },
+	{ "1800s",	64000150, 0 },
+	{ "900s",	64000120, 0 },
+	{ "480s",		64000090, 0 },
+	{ "240s",		64000060, 0 },
+	{ "120s",		64000030, 0 },
 	{ "60s",	64000000, 0 },
 	{ "50s",	50796833, 0 },
 	{ "40s",	40317473, 0 },
@@ -9193,15 +9310,20 @@ static int
 _put_OpenCapture(CONFIG_PUT_ARGS)
 {
 	PTPParams *params = &(camera->pl->params);
-	int val;
 	GPContext *context = ((PTPData *) params->data)->context;
+	int val;
+	int ret;
 
 	CR (gp_widget_get_value(widget, &val));
 	if (val) {
 		//printf("config-set: initiating opencapture\n");
-		C_PTP_REP (ptp_initiateopencapture (params, 0x0, 0x0)); /* so far use only defaults for storage and ofc */
-		params->opencapture_transid = params->transaction_id-1; /* transid will be incremented already */
-		params->inliveview = 1;
+		ret = ptp_initiateopencapture (params, 0x0, 0x0); /* so far use only defaults for storage and ofc */
+		if (ret == PTP_RC_OK) {
+			params->opencapture_transid = params->transaction_id-1; /* transid will be incremented already */
+			params->inliveview = 1;
+		} else if (ret != PTP_RC_DeviceBusy) {
+			C_PTP_REP_MSG ((ret), _("failed to initiate opencapture"));
+		}
 	} else {
 		//printf("config-set: terminating opencapture\n");
 		C_PTP_REP (ptp_terminateopencapture (params, params->opencapture_transid));
@@ -10810,6 +10932,7 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Drive Nikon DSLR Autofocus"),     "autofocusdrive",   0,  PTP_VENDOR_NIKON,   PTP_OC_NIKON_AfDrive,               _get_Nikon_AFDrive,             _put_Nikon_AFDrive },
 	{ N_("Drive Canon DSLR Autofocus"),     "autofocusdrive",   0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_DoAf,              _get_Canon_EOS_AFDrive,         _put_Canon_EOS_AFDrive },
 	{ N_("Drive Fuji Autofocus"),           "autofocusdrive",   0,  PTP_VENDOR_FUJI,    0,               			_get_Fuji_AFDrive,              _put_Fuji_AFDrive },
+	{ N_("Drive Fuji Autofocus in manual"), "autofocusdrivemanual",   0,  PTP_VENDOR_FUJI,    0,               			_get_Fuji_AFDriveManual,              _put_Fuji_AFDriveManual },
 	{ N_("Drive Nikon DSLR Manual focus"),  "manualfocusdrive", 0,  PTP_VENDOR_NIKON,   PTP_OC_NIKON_MfDrive,               _get_Nikon_MFDrive,             _put_Nikon_MFDrive },
 	{ N_("Set Nikon Autofocus area"),       "changeafarea",     0,  PTP_VENDOR_NIKON,   PTP_OC_NIKON_ChangeAfArea,          _get_Nikon_ChangeAfArea,        _put_Nikon_ChangeAfArea },
 	{ N_("Set Nikon Control Mode"),         "controlmode",      0,  PTP_VENDOR_NIKON,   PTP_OC_NIKON_ChangeCameraMode,      _get_Nikon_ControlMode,         _put_Nikon_ControlMode },
@@ -10817,7 +10940,9 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Cancel Canon DSLR Autofocus"),    "cancelautofocus",  0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_AfCancel,          _get_Canon_EOS_AFCancel,        _put_Canon_EOS_AFCancel },
 	{ N_("Drive Olympus OMD Manual focus"), "manualfocusdrive", 0,  PTP_VENDOR_GP_OLYMPUS_OMD, PTP_OC_OLYMPUS_OMD_MFDrive,	_get_Olympus_OMD_MFDrive,	_put_Olympus_OMD_MFDrive },
 	{ N_("Drive Panasonic Manual focus"),   "manualfocusdrive", 0,  PTP_VENDOR_PANASONIC, PTP_OC_PANASONIC_ManualFocusDrive,_get_Panasonic_MFDrive,		_put_Panasonic_MFDrive },
-	{ N_("Drive Fuji Manual focus"),        "manualfocusdrive", PTP_DPC_FUJI_FocusPosition, PTP_VENDOR_FUJI,  PTP_DTC_INT16,_get_INT,                   _put_INT },
+	{ N_("Drive Fuji Manual focus"),        "manualfocusdrive", PTP_DPC_FUJI_FocusPosition, PTP_VENDOR_FUJI,  PTP_DTC_INT16, _get_INT,                   _put_INT },
+	{ N_("Get Fuji focuspoint"),            "focuspoint",       0, PTP_VENDOR_FUJI, 0,                _get_Fuji_FocusPoint,       _put_Fuji_FocusPoint },
+	{ N_("Fuji FocusPoint Grid dimensions"),"focuspoints",      PTP_DPC_FUJI_FocusPoints, PTP_VENDOR_FUJI, 0,               _get_Fuji_FocusPoints,      _put_Fuji_FocusPoints },
 	{ N_("Canon EOS Zoom"),                 "eoszoom",          0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_Zoom,              _get_Canon_EOS_Zoom,            _put_Canon_EOS_Zoom },
 	{ N_("Canon EOS Zoom Position"),        "eoszoomposition",  0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_ZoomPosition,      _get_Canon_EOS_ZoomPosition,    _put_Canon_EOS_ZoomPosition },
 	{ N_("Canon EOS Viewfinder"),           "viewfinder",       0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_GetViewFinderData, _get_Canon_EOS_ViewFinder,      _put_Canon_EOS_ViewFinder },
