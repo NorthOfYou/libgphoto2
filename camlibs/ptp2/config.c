@@ -10943,6 +10943,7 @@ static struct submenu camera_actions_menu[] = {
 	{ N_("Drive Fuji Manual focus"),        "manualfocusdrive", PTP_DPC_FUJI_FocusPosition, PTP_VENDOR_FUJI,  PTP_DTC_INT16, _get_INT,                   _put_INT },
 	{ N_("Get Fuji focuspoint"),            "focuspoint",       0, PTP_VENDOR_FUJI, 0,                _get_Fuji_FocusPoint,       _put_Fuji_FocusPoint },
 	{ N_("Fuji FocusPoint Grid dimensions"),"focuspoints",      PTP_DPC_FUJI_FocusPoints, PTP_VENDOR_FUJI, 0,               _get_Fuji_FocusPoints,      _put_Fuji_FocusPoints },
+	{ N_("Fuji Zoom Position"),             "zoompos",          PTP_DPC_FUJI_LensZoomPos, PTP_VENDOR_FUJI, 0,               _get_INT,                       _put_None }, 
 	{ N_("Canon EOS Zoom"),                 "eoszoom",          0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_Zoom,              _get_Canon_EOS_Zoom,            _put_Canon_EOS_Zoom },
 	{ N_("Canon EOS Zoom Position"),        "eoszoomposition",  0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_ZoomPosition,      _get_Canon_EOS_ZoomPosition,    _put_Canon_EOS_ZoomPosition },
 	{ N_("Canon EOS Viewfinder"),           "viewfinder",       0,  PTP_VENDOR_CANON,   PTP_OC_CANON_EOS_GetViewFinderData, _get_Canon_EOS_ViewFinder,      _put_Canon_EOS_ViewFinder },
