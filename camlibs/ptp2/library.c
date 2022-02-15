@@ -7621,9 +7621,22 @@ handleregular:
 		char			*name, *content;
 		PTPDevicePropDesc	dpd;
 
+    // Feb 15, 2022 – the D5200, D5300, D3300 (and others) will occasionally lock up
+    // for 5 seconds trying the ptp_generic_getdevicepropdesc below
+    // for certain events
+    // 0xd0a4 - MovieRecordProhibitCond
+    if (params->deviceinfo.VendorExtensionID == PTP_VENDOR_NIKON) {
+      if ((event.Param1 & 0xffff) == 0xd0a4) {
+        C_MEM (*eventdata = malloc(strlen("PTP Property 0123 changed")+1));
+        sprintf (*eventdata, "PTP Property %04x changed", event.Param1 & 0xffff);
+        break;
+      }
+    }
+
 		*eventtype = GP_EVENT_UNKNOWN;
-		/* cached devprop should hafve been flushed I think... */
-		C_PTP_REP (ptp_generic_getdevicepropdesc (params, event.Param1&0xffff, &dpd));
+    // printf("Event and camera: %04x for %s\n", event.Param1 & 0xffff, params->deviceinfo.Model);
+		/* cached devprop should have been flushed I think... */
+		C_PTP_MSG (ptp_generic_getdevicepropdesc (params, event.Param1&0xffff, &dpd), "ptp_generic_getdevicepropdesc failed");
 
 		ret = camera_lookup_by_property(camera, &dpd, &name, &content, context);
 		if (ret == GP_OK) {
