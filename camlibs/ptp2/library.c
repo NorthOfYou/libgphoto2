@@ -7336,7 +7336,7 @@ sonyout:
 				goto handleregular;
 			
 			if (PTP_RC_OK == LOG_ON_PTP_E(ptp_getobjecthandles (params, PTP_HANDLER_SPECIAL, 0x000000, 0x000000, &handles))) {
-				for (i=handles.n;i--;) {
+				for (i=0;i<handles.n;i++;) {
 					if (params->inliveview == 1 && handles.Handler[i] == 0x80000001) /* Ignore preview image object handle while liveview is active */
 						continue;
 					if (PTP_RC_OK == ptp_object_find (params, handles.Handler[i], &oi)) /* already have it */
