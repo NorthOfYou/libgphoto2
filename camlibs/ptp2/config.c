@@ -2348,6 +2348,12 @@ static struct deviceproptableu8 nikon_videomode[] = {
 };
 GENERIC8TABLE(Nikon_VideoMode,nikon_videomode)
 
+static struct deviceproptableu8 nikon_liveviewselector[] = {
+	{ N_("liveview"),		0, 0 },
+	{ N_("video"),		1, 0 },
+};
+GENERIC8TABLE(Nikon_LiveViewSelector,nikon_liveviewselector)
+
 static struct deviceproptableu8 flash_modemanualpower[] = {
 	{ N_("Full"),	0x00, 0 },
 	{ "1/2",	0x01, 0 },
@@ -11354,6 +11360,8 @@ static struct submenu capture_settings_menu[] = {
 	{ N_("Auto Distortion Control"),        "autodistortioncontrol",    PTP_DPC_NIKON_AutoDistortionControl,    PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,             _put_Nikon_OnOff_UINT8 },
 	{ N_("Vignette Correction"),            "vignettecorrection",       PTP_DPC_NIKON_VignetteCtrl,             PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_VignetteCorrection,      _put_Nikon_VignetteCorrection },
 	{ N_("Video Mode"),                     "videomode",                PTP_DPC_NIKON_VideoMode,                PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_VideoMode,               _put_Nikon_VideoMode },
+	{ N_("Live View Selector"),             "liveviewselector",         PTP_DPC_NIKON_LiveViewSelector,         PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_LiveViewSelector,        _put_None },
+	{ N_("Auto DX Crop"),                "autodxcrop",                  PTP_DPC_NIKON_AutoDXCrop,               PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_OnOff_UINT8,              _put_Nikon_OnOff_UINT8 },
 	{ N_("Sensor Crop"),                    "sensorcrop",               PTP_DPC_SONY_SensorCrop,                PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_SensorCrop,               _put_Sony_SensorCrop },
 	{ N_("HDMI Output Data Depth"),         "hdmioutputdatadepth",      PTP_DPC_NIKON_HDMIOutputDataDepth,      PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_HDMIDataDepth,           _put_Nikon_HDMIDataDepth },
 	{ N_("Face Detection"),                 "facedetection",            PTP_DPC_NIKON_FaceDetection,            PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_FaceDetection,           _put_Nikon_FaceDetection },
