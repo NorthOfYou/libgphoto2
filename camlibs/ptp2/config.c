@@ -7396,6 +7396,58 @@ static struct deviceproptableu8 nikon_d850_compression[] = {
 };
 GENERIC8TABLE(Nikon_D850_Compression,nikon_d850_compression)
 
+static struct deviceproptableu8 nikon_d5_shootingspeed[] = {
+	{ N_("10 fps"),  0x00, PTP_VENDOR_NIKON },
+	{ N_("9 fps"), 0x01, PTP_VENDOR_NIKON },
+	{ N_("8 fps"), 0x02, PTP_VENDOR_NIKON },
+	{ N_("7 fps"),   0x03, PTP_VENDOR_NIKON },
+	{ N_("6 fps"),   0x04, PTP_VENDOR_NIKON },
+	{ N_("5 fps"),   0x05, PTP_VENDOR_NIKON },
+	{ N_("4 fps"),   0x06, PTP_VENDOR_NIKON },
+	{ N_("3 fps"),   0x07, PTP_VENDOR_NIKON },
+	{ N_("2 fps"),   0x08, PTP_VENDOR_NIKON },
+	{ N_("1 fps"),   0x09, PTP_VENDOR_NIKON },
+};
+GENERIC8TABLE(Nikon_D5_ShootingSpeed,nikon_d5_shootingspeed)
+
+static struct deviceproptableu8 nikon_d5_shootingspeedhigh[] = {
+	{ N_("10 fps"),  0x00, PTP_VENDOR_NIKON },
+	{ N_("11 fps"), 0x01, PTP_VENDOR_NIKON },
+	{ N_("12 fps"), 0x02, PTP_VENDOR_NIKON },
+	{ N_("14 fps (mirror up)"),   0x03, PTP_VENDOR_NIKON },
+};
+GENERIC8TABLE(Nikon_D5_ContinuousSpeedHigh,nikon_d5_shootingspeedhigh)
+
+static struct deviceproptableu8 nikon_d5_dlighting[] = {
+	{ N_("Auto"),  0x00, PTP_VENDOR_NIKON },
+	{ N_("Off"), 0x01, PTP_VENDOR_NIKON },
+	{ N_("Low"), 0x02, PTP_VENDOR_NIKON },
+	{ N_("Normal"),   0x03, PTP_VENDOR_NIKON },
+	{ N_("High"),   0x04, PTP_VENDOR_NIKON },
+	{ N_("Extra High 1"),   0x05, PTP_VENDOR_NIKON },
+	{ N_("Extra High 2"),   0x06, PTP_VENDOR_NIKON },
+};
+GENERIC8TABLE(Nikon_D5_ActiveDLighting,nikon_d5_dlighting)
+
+static struct deviceproptableu8 nikon_d5_moviequality[] = {
+	{ N_("3840x2160; 30p"),  0x00, PTP_VENDOR_NIKON },
+	{ N_("3840x2160; 25p"), 0x01, PTP_VENDOR_NIKON },
+	{ N_("3840x2160; 24p"), 0x02, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 60p"),   0x03, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 50p"),   0x04, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 30p"),   0x05, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 25p"),   0x06, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 24p"),   0x07, PTP_VENDOR_NIKON },
+	{ N_("1280x 720; 60p"),   0x08, PTP_VENDOR_NIKON },
+	{ N_("1280x 720; 50p"),   0x09, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 60p crop"),   0x0A, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 50p crop"),   0x0B, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 30p crop"),   0x0C, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 25p crop"),   0x0D, PTP_VENDOR_NIKON },
+	{ N_("1920x1080; 24p crop"),   0x0E, PTP_VENDOR_NIKON },
+};
+GENERIC8TABLE(Nikon_D5_MovieQuality,nikon_d5_moviequality)
+
 static struct deviceproptableu8 nikon_d7500_compression[] = {
 	{ N_("JPEG Basic"),  0x00, PTP_VENDOR_NIKON },
 	{ N_("JPEG Basic*"), 0x01, PTP_VENDOR_NIKON },
@@ -11417,6 +11469,17 @@ static struct submenu nikon_d850_capture_settings[] = {
 	{ 0,0,0,0,0,0,0 },
 };
 
+static struct submenu nikon_d5_capture_settings[] = {
+	{ N_("Image Quality"),          	"imagequality",			PTP_DPC_CompressionSetting,     PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D850_Compression,       _put_Nikon_D850_Compression },
+	{ N_("Active D-Lighting"),              "dlighting",            PTP_DPC_NIKON_ActiveDLighting,  PTP_VENDOR_NIKON,   PTP_DTC_UINT8,   _get_Nikon_D5_ActiveDLighting,   _put_Nikon_D5_ActiveDLighting },
+	{ N_("Continuous Shooting Speed Slow"), "shootingspeed",        PTP_DPC_NIKON_D1ShootingSpeed,  PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D5_ShootingSpeed,     _put_Nikon_D5_ShootingSpeed },
+	{ N_("Continuous Shooting Speed High"), "shootingspeedhigh",    PTP_DPC_NIKON_ContinuousSpeedHigh,  PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D5_ContinuousSpeedHigh, _put_Nikon_D5_ContinuousSpeedHigh },
+	{ N_("Movie Resolution"),               "moviequality",         PTP_DPC_NIKON_MovScreenSize,    PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D5_MovieQuality,      _put_Nikon_D5_MovieQuality },
+	{ N_("Center Weight Area"),             "centerweightsize",     PTP_DPC_NIKON_CenterWeightArea, PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D850_CenterWeight,      _put_Nikon_D850_CenterWeight },
+	{ N_("Focus Metering Mode"),            "focusmetermode",       PTP_DPC_FocusMeteringMode,	PTP_VENDOR_NIKON,   PTP_DTC_UINT16, _get_Nikon_D850_FocusMetering,     _put_Nikon_D850_FocusMetering },
+	{ 0,0,0,0,0,0,0 },
+};
+
 static struct submenu nikon_d7500_capture_settings[] = {
 	{ N_("Image Quality"), "imagequality", PTP_DPC_CompressionSetting, PTP_VENDOR_NIKON, PTP_DTC_UINT8, _get_Nikon_D7500_Compression, _put_Nikon_D7500_Compression },
 	{ 0,0,0,0,0,0,0 },
@@ -11557,6 +11620,7 @@ static struct menu menus[] = {
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0446, nikon_d780_capture_settings,    NULL,   NULL },
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0414, nikon_d40_capture_settings,     NULL,   NULL },
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0441, nikon_d850_capture_settings,    NULL,   NULL },
+	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x043a, nikon_d5_capture_settings,      NULL,   NULL }, /* D5 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0442, nikon_z6_capture_settings,      NULL,   NULL },	/* Z7 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0443, nikon_z6_capture_settings,      NULL,   NULL }, /* Z6 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0444, nikon_z6_capture_settings,      NULL,   NULL }, /* Z50 */
