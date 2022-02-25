@@ -162,6 +162,7 @@ static inline int
 is_canon_1dx_series(PTPParams *params) {
 	if (params->deviceinfo.VendorExtensionID != PTP_VENDOR_CANON) return 0;
   if (!strcmp(params->deviceinfo.Model, "Canon EOS-1D X Mark III")) return 1;
+  if (!strcmp(params->deviceinfo.Model, "Canon EOS-1D X Mark II")) return 1;
 	return 0;
 }
 

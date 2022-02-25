@@ -2350,11 +2350,10 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			case PTP_DPC_CANON_EOS_ImageFormatCF:
 			case PTP_DPC_CANON_EOS_ImageFormatSD:
 			case PTP_DPC_CANON_EOS_ImageFormatExtHD:
-        printf("CAMERA NAME: %s\n", params->deviceinfo.Model);
+        // printf("CAMERA NAME: %s\n", params->deviceinfo.Model);
 
         /* special handling of ImageFormat properties */
           if (is_canon_1dx_series(params)) {
-            printf("PARSING THE 1DX III\n");
             for (j=0;j<propxcnt;j++) {
               dpd->FORM.Enum.SupportedValue[j].u16 =
                 ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
@@ -2679,8 +2678,7 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case PTP_DPC_CANON_EOS_ImageFormatSD:
 				case PTP_DPC_CANON_EOS_ImageFormatExtHD:
 					dpd->DataType = PTP_DTC_UINT16;
-          if (!strcmp(params->deviceinfo.Model, "Canon EOS-1D X Mark III")) {
-            printf("FACTORY DEFAULT THE 1DX III\n");
+          if (is_canon_1dx_series(params)) {
             dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
           } else {
             dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_ImageFormat( params, &xdata );
