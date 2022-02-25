@@ -3987,10 +3987,17 @@ ptp_canon_eos_setdevicepropvalue (PTPParams* params,
 	case PTP_DPC_CANON_EOS_ImageFormatSD:
 	case PTP_DPC_CANON_EOS_ImageFormatExtHD:
 		/* special handling of ImageFormat properties */
-		size = 8 + ptp_pack_EOS_ImageFormat( params, NULL, value->u16 );
-		data = malloc( size );
-		if (!data) return PTP_RC_GeneralError;
-		ptp_pack_EOS_ImageFormat( params, data + 8, value->u16 );
+    if (is_canon_1dx_series(params)) {
+      size = 8 + ptp_pack_EOS_1DX_ImageFormat( params, NULL, value->u16 );
+      data = malloc( size );
+      if (!data) return PTP_RC_GeneralError;
+      ptp_pack_EOS_1DX_ImageFormat( params, data + 8, value->u16 );
+    } else {
+      size = 8 + ptp_pack_EOS_ImageFormat( params, NULL, value->u16 );
+      data = malloc( size );
+      if (!data) return PTP_RC_GeneralError;
+      ptp_pack_EOS_ImageFormat( params, data + 8, value->u16 );
+    }
 		break;
 	case PTP_DPC_CANON_EOS_CustomFuncEx:
 		/* special handling of CustomFuncEx properties */

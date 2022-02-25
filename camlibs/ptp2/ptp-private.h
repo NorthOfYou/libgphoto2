@@ -156,6 +156,15 @@ has_sony_mode_300(PTPParams *params) {
 	return 0;
 }
 
+// The 1DX series encodes image compression
+// differently
+static inline int
+is_canon_1dx_series(PTPParams *params) {
+	if (params->deviceinfo.VendorExtensionID != PTP_VENDOR_CANON) return 0;
+  if (!strcmp(params->deviceinfo.Model, "Canon EOS-1D X Mark III")) return 1;
+	return 0;
+}
+
 static inline int
 have_sigma_prop(PTPParams *params, uint16_t vendor, uint16_t prop) {
 	/* The special Canon EOS property set gets special treatment. */

@@ -1739,6 +1739,8 @@ ptp_unpack_EOS_ImageFormat (PTPParams* params, unsigned char** data )
 	uint32_t n = dtoh32a( d );
 	uint32_t l, t1, s1, c1, t2 = 0, s2 = 0, c2 = 0;
 
+  // printf("IMAGEFORMAT: \nn = %d\n", n);
+
 	if (n != 1 && n !=2) {
 		ptp_debug (params, "parsing EOS ImageFormat property failed (n != 1 && n != 2: %d)", n);
 		return 0;
@@ -1754,6 +1756,11 @@ ptp_unpack_EOS_ImageFormat (PTPParams* params, unsigned char** data )
 	s1 = dtoh32a( d+=4 );
 	c1 = dtoh32a( d+=4 );
 
+  // printf("l = %d\n", l);
+  // printf("t1 = %d\n", t1);
+  // printf("s1 = %d\n", s1);
+  // printf("c1 = %d\n", c1);
+
 	if (n == 2) {
 		l = dtoh32a( d+=4 );
 		if (l != 0x10) {
@@ -1763,6 +1770,11 @@ ptp_unpack_EOS_ImageFormat (PTPParams* params, unsigned char** data )
 		t2 = dtoh32a( d+=4 );
 		s2 = dtoh32a( d+=4 );
 		c2 = dtoh32a( d+=4 );
+
+    // printf("l = %d\n", l);
+    // printf("t2 = %d\n", t2);
+    // printf("s2 = %d\n", s2);
+    // printf("c2 = %d\n", c2);
 	}
 
 	*data = (unsigned char*) d+4;
@@ -1808,6 +1820,148 @@ ptp_pack_EOS_ImageFormat (PTPParams* params, unsigned char* data, uint16_t value
 
 	return s;
 }
+
+static inline uint16_t
+ptp_unpack_EOS_1DX_ImageFormat (PTPParams* params, unsigned char** data )
+{
+  /*
+    Same as ptp_unpack_EOS_ImageFormat, but handle
+    the fact that the 1DX II and III (at least) set
+    the jpg compression values to 0 as they handle
+    compression else where in the menu
+    */
+
+  const unsigned char* d = *data;
+  uint32_t n = dtoh32a( d );
+  uint32_t l, t1, s1, c1, t2 = 0, s2 = 0, c2 = 0;
+
+  // printf("IMAGEFORMAT: \nn = %d\n", n);
+
+  if (n != 1 && n !=2) {
+    ptp_debug (params, "parsing EOS ImageFormat property failed (n != 1 && n != 2: %d)", n);
+    return 0;
+  }
+
+  l = dtoh32a( d+=4 );
+  if (l != 0x10) {
+    ptp_debug (params, "parsing EOS ImageFormat property failed (l != 0x10: 0x%x)", l);
+    return 0;
+  }
+
+  t1 = dtoh32a( d+=4 );
+  s1 = dtoh32a( d+=4 );
+  c1 = dtoh32a( d+=4 );
+
+  // printf("l = %d\n", l);
+  // printf("t1 = %d\n", t1);
+  // printf("s1 = %d\n", s1);
+  // printf("c1 = %d\n", c1);
+
+  if (n == 2) {
+    l = dtoh32a( d+=4 );
+    if (l != 0x10) {
+      ptp_debug (params, "parsing EOS ImageFormat property failed (l != 0x10: 0x%x)", l);
+      return 0;
+    }
+    t2 = dtoh32a( d+=4 );
+    s2 = dtoh32a( d+=4 );
+    c2 = dtoh32a( d+=4 );
+
+    // printf("l = %d\n", l);
+    // printf("t2 = %d\n", t2);
+    // printf("s2 = %d\n", s2);
+    // printf("c2 = %d\n", c2);
+  }
+
+  *data = (unsigned char*) d+4;
+
+  /* deal with S1/S2/S3 JPEG sizes, see above. */
+  if( s1 >= 0xe ) {
+    s1--;
+  }
+
+  if( s2 >= 0xe ) {
+    s2--;
+  }
+
+
+  /* encode RAW/JPG flag
+     Different than regular EOS cameras, in
+     that jpg/heif quality are handled by a
+     separate setting. JPG compression here is
+     just 0 (always), so it conflicts with RAW only
+     settings when we unpack to int16
+  */
+  if (t1 == 6) {
+    c1 |= 8;
+  } else if (t1 == 1) {
+    c1 = 1; // denote that this is a jpg
+  }
+
+  if (t2 == 6) {
+    c2 |= 8;
+  } else if (t2 == 1) {
+    c2 = 1; // denote that this is a jpg
+  }
+
+  return ((s1 & 0xF) << 12) | ((c1 & 0xF) << 8) | ((s2 & 0xF) << 4) | ((c2 & 0xF) << 0);
+}
+
+static inline uint32_t
+ptp_pack_EOS_1DX_ImageFormat (PTPParams* params, unsigned char* data, uint16_t value)
+{
+  uint32_t n = (value & 0xFF) ? 2 : 1;
+  uint32_t s = 4 + 0x10 * n;
+  uint32_t t1, t2, c1, c2;
+
+  if( !data )
+    return s;
+
+#define PACK_5DM3_SMALL_JPEG_SIZE( X ) (X) >= 0xd ? (X)+1 : (X)
+
+  htod32a(data+=0, n);
+  htod32a(data+=4, 0x10);
+
+  // unpack the raw/jpg flag and compression from the
+  // compression nibble
+  if ((((value >> 8) & 0xF)) == 1) {
+    // JPG
+    t1 = 1;
+    c1 = 0; // always 0 on the 1dx ii and iii
+  } else if (((value >> 8) & 0xF) >> 3) {
+    // RAW
+    t1 = 6;
+    c1 = ((value >> 8) & 0xF) & ~8;
+  }
+
+  htod32a(data+=4, t1);
+  htod32a(data+=4, PACK_5DM3_SMALL_JPEG_SIZE((value >> 12) & 0xF));
+  htod32a(data+=4, c1);
+
+  if (n==2) {
+    // unpack the raw/jpg flag and compression from the
+    // compression nibble
+    if (((value >> 0) & 0xF) == 1) {
+      // JPG
+      t2 = 1;
+      c2 = 0; // always 0 on the 1dx ii and iii
+    } else if (((value >> 8) & 0xF) >> 3) {
+      // RAW
+      t2 = 6;
+      c2 = ((value >> 0) & 0xF) & ~8;
+    }
+
+    htod32a(data+=4, 0x10);
+    htod32a(data+=4, t2);
+    htod32a(data+=4, PACK_5DM3_SMALL_JPEG_SIZE((value >> 4) & 0xF));
+    htod32a(data+=4, c2);
+  }
+
+#undef PACK_5DM3_SMALL_JPEG_SIZE
+
+  return s;
+}
+
 
 /* 00: 32 bit size
  * 04: 16 bit subsize
@@ -2196,12 +2350,23 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			case PTP_DPC_CANON_EOS_ImageFormatCF:
 			case PTP_DPC_CANON_EOS_ImageFormatSD:
 			case PTP_DPC_CANON_EOS_ImageFormatExtHD:
-				/* special handling of ImageFormat properties */
-				for (j=0;j<propxcnt;j++) {
-					dpd->FORM.Enum.SupportedValue[j].u16 =
-							ptp_unpack_EOS_ImageFormat( params, &xdata );
-					ptp_debug (params, "event %d: suppval[%d] of %x is 0x%x.", i, j, proptype, dpd->FORM.Enum.SupportedValue[j].u16);
-				}
+        printf("CAMERA NAME: %s\n", params->deviceinfo.Model);
+
+        /* special handling of ImageFormat properties */
+          if (is_canon_1dx_series(params)) {
+            printf("PARSING THE 1DX III\n");
+            for (j=0;j<propxcnt;j++) {
+              dpd->FORM.Enum.SupportedValue[j].u16 =
+                ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
+              ptp_debug (params, "event %d: suppval[%d] of %x is 0x%x.", i, j, proptype, dpd->FORM.Enum.SupportedValue[j].u16);
+            }
+          } else {
+            for (j=0;j<propxcnt;j++) {
+              dpd->FORM.Enum.SupportedValue[j].u16 =
+                ptp_unpack_EOS_ImageFormat( params, &xdata );
+              ptp_debug (params, "event %d: suppval[%d] of %x is 0x%x.", i, j, proptype, dpd->FORM.Enum.SupportedValue[j].u16);
+            }
+          }
 				break;
 			default:
 				/* 'normal' enumerated types */
@@ -2514,7 +2679,12 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case PTP_DPC_CANON_EOS_ImageFormatSD:
 				case PTP_DPC_CANON_EOS_ImageFormatExtHD:
 					dpd->DataType = PTP_DTC_UINT16;
-					dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_ImageFormat( params, &xdata );
+          if (!strcmp(params->deviceinfo.Model, "Canon EOS-1D X Mark III")) {
+            printf("FACTORY DEFAULT THE 1DX III\n");
+            dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
+          } else {
+            dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_ImageFormat( params, &xdata );
+          }
 					dpd->CurrentValue.u16		= dpd->FactoryDefaultValue.u16;
 					ptp_debug (params,"event %d: decoded imageformat, currentvalue of %x is %x", i, proptype, dpd->CurrentValue.u16);
 					break;
