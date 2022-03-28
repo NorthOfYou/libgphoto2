@@ -2960,7 +2960,7 @@ _put_Fuji_AFDrive(CONFIG_PUT_ARGS)
 	PTPPropertyValue	pval;
 	uint16_t        af_start_code;
 	uint16_t        af_stop_code;
-	int ret;
+	int ret = GP_OK;
 
 	// get the focus mode
 	C_PTP_REP (ptp_getdevicepropvalue (params, PTP_DPC_FocusMode, &pval, PTP_DTC_UINT16));
