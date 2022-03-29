@@ -7544,6 +7544,8 @@ static struct deviceproptableu8 sony_pc_save_image_format[] = {
 	{ N_("RAW & JPEG"),   0x01, 0 },
 	{ N_("JPEG Only"),    0x02, 0 },
 	{ N_("RAW Only"),     0x03, 0 },
+	{ N_("RAW & HEIF"),   0x04, 0 },
+	{ N_("HEIF Only"),    0x05, 0 }
 };
 GENERIC8TABLE(Sony_PcSaveImageFormat, sony_pc_save_image_format)
 
