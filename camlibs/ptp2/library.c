@@ -2470,6 +2470,10 @@ static struct {
 	{"Canon:EOS R5",			0x04a9, 0x32f4, PTP_CAP|PTP_CAP_PREVIEW},
 	/* Steve Rencontre <steve@rsn-tech.co.uk> */
 	{"Canon:EOS R6",			0x04a9, 0x32f5, PTP_CAP|PTP_CAP_PREVIEW},
+	/* Ben Govero <ben@witharsenal.com> */
+	{"Canon:EOS R6 Mark II",			0x04a9, 0x330b, PTP_CAP|PTP_CAP_PREVIEW},
+	/* https://github.com/gphoto/libgphoto2/issues/832 */
+	{"Canon:EOS R7",			0x04a9, 0x32f7, PTP_CAP|PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/642 */
 	{"Canon:EOS M50m2",			0x04a9, 0x32f9, PTP_CAP|PTP_CAP_PREVIEW},
 
