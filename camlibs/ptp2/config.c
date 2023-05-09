@@ -9009,7 +9009,16 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 		}
 
 		if (!value.u8) {
-			value.u8 = 1;
+			// From the Nikon docs, 1 is SDRAM and 0 is Memory Card
+			// so we're not sure why this is setting the val to SDRAM
+			// when in the Arsenal code we just have to set it back to Card
+			// The recordingmedia setting isn't present on the Z9 as of the 3.10
+			// firmware so we're only fixing for that camera at the moment
+			if (strcmp(params->deviceinfo.Model,"Nikon:Z9")) {
+				value.u8 = 0;
+			} else {
+				value.u8 = 1;
+			}
 			LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_RecordingMedia, &value, PTP_DTC_UINT8));
 			C_PTP_REP_MSG (ptp_nikon_start_liveview (params),
 				       _("Nikon enable liveview failed"));

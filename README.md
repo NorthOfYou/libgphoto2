@@ -1,3 +1,12 @@
+# North of You README
+
+TODOS:
+  - In `config.c#_put_Nikon_ViewFinder` they set PTP_DPC_NIKON_RecordingMedia to 1, which is SDRAM according the Nikon SDK. This probably should be 0 (card) for
+    every camera. In the arsenal codebase we have to set recordingmedia back to card after starting/stopping liveview, so it's probably safe to do this here
+    except we don't have time to retest every camera right now, so we just added if the Z9 which doesn't expose recordingmedia in its list of keys
+
+# ORIGINAL GPHOTO README BELOW
+
 # libgphoto2
 
 Hello and welcome to the wonderful world of gphoto! This is libgphoto2, the
@@ -11,7 +20,7 @@ questions, please don't hesitate to contact our mailing list.
 ## What is libgphoto2?
 
 libgphoto2 is a library that can be used by applications to access various
-digital cameras.  
+digital cameras.
 
 For more information on gphoto, see [gphoto project home page].
 
