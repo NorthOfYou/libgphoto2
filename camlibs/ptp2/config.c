@@ -2037,6 +2037,114 @@ _put_Nikon_MovieLoopLength(CONFIG_PUT_ARGS)
 	return GP_OK;
 }
 
+// The Nikon Z9 doesn't expose all of the settings
+// so we have to
+
+// NB: I first implemented autoiso2 as a toggle but decided to standardize as an On/Off switch
+// Leaving the toggle code here as ref
+// static int
+// _get_Nikon_Z9_AutoIso(CONFIG_GET_ARGS) {
+// 	PTPPropertyValue	value;
+// 	PTPParams		*params = &(camera->pl->params);
+// 	int val = 2; /* always changed */
+//
+// 	// read the ISOAuto setting from the Z9
+// 	if (LOG_ON_PTP_E (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_ISOAuto, &value, PTP_DTC_UINT8)) == PTP_RC_OK ) {
+// 		val = value.u8;
+// 	}
+//
+// 	gp_widget_new (GP_WIDGET_TOGGLE, _(menu->label), widget);
+// 	gp_widget_set_name (*widget,menu->name);
+// 	gp_widget_set_value  (*widget, &val);
+// 	return GP_OK;
+// }
+//
+// static int
+// _put_Nikon_Z9_AutoIso(CONFIG_PUT_ARGS) {
+// 	// CONFIG_PUT_ARGS Camera *camera, CameraWidget *widget, PTPPropertyValue *propval, PTPDevicePropDesc *dpd
+// 	int value;
+// 	PTPParams		*params = &(camera->pl->params);
+//
+// 	CR (gp_widget_get_value(widget, &value));
+// 	if (LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_ISOAuto, &value, PTP_DTC_UINT8)) == PTP_RC_OK) {
+// 		return GP_OK;
+// 	}
+//
+// 	return (GP_ERROR);
+// }
+
+
+static int
+_get_Nikon_Z9_AutoIso(CONFIG_GET_ARGS) {
+	PTPPropertyValue	value;
+	PTPParams		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
+	gp_widget_set_name ( *widget, menu->name);
+	gp_widget_add_choice (*widget,_("On"));
+	gp_widget_add_choice (*widget,_("Off"));
+
+	// read the Long exposure noise reduction setting from the Z9
+	if (LOG_ON_PTP_E (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_ISOAuto, &value, PTP_DTC_UINT8)) == PTP_RC_OK ) {
+		gp_widget_set_value ( *widget, (value.u8?_("On"):_("Off")));
+	}
+
+	return (GP_OK);
+}
+
+static int
+_put_Nikon_Z9_AutoIso(CONFIG_PUT_ARGS) {
+	char *value;
+	int int_val = 0;
+	PTPParams		*params = &(camera->pl->params);
+
+	CR (gp_widget_get_value(widget, &value));
+	if(!strcmp(value,_("On"))) {
+		int_val = 1;
+	}
+
+	if (LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_ISOAuto, &int_val, PTP_DTC_UINT8)) == PTP_RC_OK) {
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
+
+static int
+_get_Nikon_Z9_Longexpnr(CONFIG_GET_ARGS) {
+	PTPPropertyValue	value;
+	PTPParams		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
+	gp_widget_set_name ( *widget, menu->name);
+	gp_widget_add_choice (*widget,_("On"));
+	gp_widget_add_choice (*widget,_("Off"));
+
+	// read the Long exposure noise reduction setting from the Z9
+	if (LOG_ON_PTP_E (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LongExposureNoiseReduction, &value, PTP_DTC_UINT8)) == PTP_RC_OK ) {
+		gp_widget_set_value ( *widget, (value.u8?_("On"):_("Off")));
+	}
+
+	return (GP_OK);
+}
+
+static int
+_put_Nikon_Z9_Longexpnr(CONFIG_PUT_ARGS) {
+	char *value;
+	int int_val = 0;
+	PTPParams		*params = &(camera->pl->params);
+
+	CR (gp_widget_get_value(widget, &value));
+	if(!strcmp(value,_("On"))) {
+		int_val = 1;
+	}
+
+	if (LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_LongExposureNoiseReduction, &int_val, PTP_DTC_UINT8)) == PTP_RC_OK) {
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
 
 static struct deviceproptableu8 canon_quality[] = {
 	{ N_("undefined"),	0x00, 0 },
@@ -11540,6 +11648,15 @@ static struct submenu nikon_z6_capture_settings[] = {
 	{ 0,0,0,0,0,0,0 },
 };
 
+static struct submenu nikon_z9_capture_settings[] = {
+	{ N_("Image Quality"),          	"imagequality",		PTP_DPC_CompressionSetting,     PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_D850_Compression,	_put_Nikon_D850_Compression },
+	{ N_("Focus Metering Mode"),            "focusmetermode",       PTP_DPC_FocusMeteringMode,	PTP_VENDOR_NIKON,   PTP_DTC_UINT16, _get_Nikon_D850_FocusMetering,	_put_Nikon_D850_FocusMetering },
+	{ N_("Minimum Shutter Speed"),  	"minimumshutterspeed",  PTP_DPC_NIKON_PADVPMode,	PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_Z6_PADVPValue,		_put_Nikon_Z6_PADVPValue },
+  { N_("Auto ISO"),               "autoiso2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_AutoIso,         _put_Nikon_Z9_AutoIso },
+  { N_("Long exposure noise reduction"),               "longexpnr2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_Longexpnr,         _put_Nikon_Z9_Longexpnr },
+  { 0,0,0,0,0,0,0 },
+};
+
 static struct submenu nikon_d5100_capture_settings[] = {
 	{ N_("Movie Quality"),          "moviequality",         PTP_DPC_NIKON_MovScreenSize,        0,                  PTP_DTC_UINT8,  _get_Nikon_D5100_MovieQuality,      _put_Nikon_D5100_MovieQuality },
 	{ N_("Exposure Program"),       "expprogram",           PTP_DPC_ExposureProgramMode,        0,                  PTP_DTC_UINT16, _get_NIKON_D5100_ExposureProgram,   _put_NIKON_D5100_ExposureProgram },
@@ -11653,6 +11770,7 @@ static struct menu menus[] = {
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0444, nikon_z6_capture_settings,      NULL,   NULL }, /* Z50 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0448, nikon_z6_capture_settings,      NULL,   NULL }, /* Z5 guessed */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x044b, nikon_z6_capture_settings,      NULL,   NULL }, /* Z7_2 guessed */
+	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0450, nikon_z9_capture_settings,      NULL,   NULL }, /* Z9 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x044c, nikon_z6_capture_settings,      NULL,   NULL }, /* Z6_2 guessed */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0,      nikon_generic_capture_settings, NULL,   NULL },
 	{ N_("Capture Settings"),           "capturesettings",  0,      0,      capture_settings_menu,          NULL,   NULL },
