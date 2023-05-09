@@ -2810,6 +2810,7 @@ static struct deviceproptableu16 canon_isospeed[] = {
 	{ "409600",		0x00a8, 0 },
 	{ "819200",		0x00b0, 0 },
 	{ N_("Auto"),		0x0000, 0 },
+	{ N_("Auto ISO"),		0x0001, 0 },
 };
 GENERIC16TABLE(Canon_ISO,canon_isospeed)
 
