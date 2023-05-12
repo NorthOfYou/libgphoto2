@@ -2773,6 +2773,9 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				dpd = _lookup_or_allocate_canon_prop(params, proptype);
 				dpd->CurrentValue.u16 = curdata[curoff+5]; /* just use last byte */
 
+        // print out the bytes to inspect
+        // printf("Shutter: %02x %02x %02x %02x %02x %02x %02x %02x\n", curdata[curoff+5], curdata[curoff+6], curdata[curoff+7], curdata[curoff+8], curdata[curoff+9], curdata[curoff+10], curdata[curoff+11], curdata[curoff+12]);
+
 				ce[i].type = PTP_CANON_EOS_CHANGES_TYPE_PROPERTY;
 				ce[i].u.propid = proptype;
 				/* hack to differ between older EOS and EOS 200D newer */
@@ -2783,6 +2786,10 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case 0x13:
 					curoff += 7;	/* f (200D), 8 (M10) ???, 11 is EOS R , 12 is EOS m6 Mark2*/
 					break;
+        case 0x14: /* Canon R6 mark II and R7 */
+          dpd->CurrentValue.u16 = curdata[curoff+7]; /* new shutter pos */
+          curoff += 9;
+          break;
 				case 0x7:
 				case 0x8: /* EOS 70D */
 				case 0xb: /* EOS 5Ds */
