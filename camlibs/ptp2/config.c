@@ -2238,6 +2238,55 @@ _put_Nikon_Z9_FocusMetering(CONFIG_PUT_ARGS) {
 	return (GP_ERROR);
 }
 
+// NEF vs High Efficiency Raw vs High Efficiency Raw*
+static int
+_get_Nikon_Z9_RawCompressionType(CONFIG_GET_ARGS) {
+	PTPPropertyValue	value;
+	PTPParams		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
+	gp_widget_set_name ( *widget, menu->name);
+	gp_widget_add_choice (*widget,_("Lossless compressed"));
+	gp_widget_add_choice (*widget,_("High efficiency*"));
+	gp_widget_add_choice (*widget,_("High efficiency"));
+
+	if (LOG_ON_PTP_E (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_RawCompression, &value, PTP_DTC_UINT8)) == PTP_RC_OK ) {
+		if (value.u16 == 0x0000) {
+			gp_widget_set_value ( *widget, _("Lossless compressed"));
+		} else if (value.u16 == 0x0003) {
+			gp_widget_set_value ( *widget, _("High efficiency*"));
+		} else if (value.u16 == 0x0004) {
+			gp_widget_set_value ( *widget, _("High efficiency"));
+		}
+
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
+
+static int
+_put_Nikon_Z9_RawCompressionType(CONFIG_PUT_ARGS) {
+	char *value;
+	int int_val = 0;
+	PTPParams		*params = &(camera->pl->params);
+
+	CR (gp_widget_get_value(widget, &value));
+	if(!strcmp(value,_("Lossless compressed"))) {
+		int_val = 0x0000;
+	} else if (!strcmp(value,_("High efficiency*"))) {
+		int_val = 0x0003;
+	} else if (!strcmp(value,_("High efficiency"))) {
+		int_val = 0x0004;
+	}
+
+	if (LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_RawCompression, &int_val, PTP_DTC_UINT8)) == PTP_RC_OK) {
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
+
 static struct deviceproptableu8 canon_quality[] = {
 	{ N_("undefined"),	0x00, 0 },
 	{ N_("economy"),	0x01, 0 },
@@ -11757,6 +11806,7 @@ static struct submenu nikon_z9_capture_settings[] = {
   { N_("Auto ISO"),               "autoiso2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_AutoIso,         _put_Nikon_Z9_AutoIso },
   { N_("Long exposure noise reduction"),               "longexpnr2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_Longexpnr,         _put_Nikon_Z9_Longexpnr },
   { N_("Still capture focus metering mode"),               "focusmetermode2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_FocusMetering,         _put_Nikon_Z9_FocusMetering },
+  { N_("Raw Compression Type"),               "rawcompression2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_RawCompressionType,         _put_Nikon_Z9_RawCompressionType },
   { 0,0,0,0,0,0,0 },
 };
 
