@@ -2146,6 +2146,98 @@ _put_Nikon_Z9_Longexpnr(CONFIG_PUT_ARGS) {
 	return (GP_ERROR);
 }
 
+// per the Nikon Z9 SDK, the property name is StillFocusMeteringMode
+// and the key is 0x0000D05D, which in ptp.h is assigned to PTP_DPC_NIKON_LiveViewAFArea
+// so there's some confusion here.	I'm going to use the property name, but reference
+// the key in the code.
+static int
+_get_Nikon_Z9_FocusMetering(CONFIG_GET_ARGS) {
+	PTPPropertyValue	value;
+	PTPParams		*params = &(camera->pl->params);
+
+	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
+	gp_widget_set_name ( *widget, menu->name);
+	gp_widget_add_choice (*widget,_("Dynamic AF (S)"));
+	gp_widget_add_choice (*widget,_("Single-point AF"));
+	gp_widget_add_choice (*widget,_("Auto-area AF"));
+	gp_widget_add_choice (*widget,_("3D-Tracking"));
+	gp_widget_add_choice (*widget,_("Dynamic AF(M)"));
+	gp_widget_add_choice (*widget,_("Dynamic AF(L)"));
+	gp_widget_add_choice (*widget,_("Pinpoint AF"));
+	gp_widget_add_choice (*widget,_("Wide-area AF (S)"));
+	gp_widget_add_choice (*widget,_("Wide-area AF (L)"));
+	gp_widget_add_choice (*widget,_("Wide-area AF (C1)"));
+	gp_widget_add_choice (*widget,_("Wide-area AF (C2)"));
+
+	if (LOG_ON_PTP_E (ptp_getdevicepropvalue (params, PTP_DPC_NIKON_LiveViewAFArea, &value, PTP_DTC_UINT16)) == PTP_RC_OK ) {
+		if (value.u16 == 0x0002) {
+			gp_widget_set_value ( *widget, _("Dynamic AF (S)"));
+		} else if (value.u16 == 0x8010) {
+			gp_widget_set_value ( *widget, _("Single-point AF"));
+		} else if (value.u16 == 0x8011) {
+			gp_widget_set_value ( *widget, _("Auto-area AF"));
+		} else if (value.u16 == 0x8012) {
+			gp_widget_set_value ( *widget, _("3D-Tracking"));
+		} else if (value.u16 == 0x8013) {
+			gp_widget_set_value ( *widget, _("Dynamic AF(M)"));
+		} else if (value.u16 == 0x8014) {
+			gp_widget_set_value ( *widget, _("Dynamic AF(L)"));
+		} else if (value.u16 == 0x8017) {
+			gp_widget_set_value ( *widget, _("Pinpoint AF"));
+		} else if (value.u16 == 0x8018) {
+			gp_widget_set_value ( *widget, _("Wide-area AF (S)"));
+		} else if (value.u16 == 0x8019) {
+			gp_widget_set_value ( *widget, _("Wide-area AF (L)"));
+		} else if (value.u16 == 0x801E) {
+			gp_widget_set_value ( *widget, _("Wide-area AF (C1)"));
+		} else if (value.u16 == 0x801F) {
+			gp_widget_set_value ( *widget, _("Wide-area AF (C2)"));
+		}
+
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
+
+static int
+_put_Nikon_Z9_FocusMetering(CONFIG_PUT_ARGS) {
+	char *value;
+	int int_val = 0;
+	PTPParams		*params = &(camera->pl->params);
+
+	CR (gp_widget_get_value(widget, &value));
+	if(!strcmp(value,_("Dynamic AF (S)"))) {
+		int_val = 0x0002;
+	} else if (!strcmp(value,_("Single-point AF"))) {
+		int_val = 0x8010;
+	} else if (!strcmp(value,_("Auto-area AF"))) {
+		int_val = 0x8011;
+	} else if (!strcmp(value,_("3D-Tracking"))) {
+		int_val = 0x8012;
+	} else if (!strcmp(value,_("Dynamic AF(M)"))) {
+		int_val = 0x8013;
+	} else if (!strcmp(value,_("Dynamic AF(L)"))) {
+		int_val = 0x8014;
+	} else if (!strcmp(value,_("Pinpoint AF"))) {
+		int_val = 0x8017;
+	} else if (!strcmp(value,_("Wide-area AF (S)"))) {
+		int_val = 0x8018;
+	} else if (!strcmp(value,_("Wide-area AF (L)"))) {
+		int_val = 0x8019;
+	} else if (!strcmp(value,_("Wide-area AF (C1)"))) {
+		int_val = 0x801E;
+	} else if (!strcmp(value,_("Wide-area AF (C2)"))) {
+		int_val = 0x801F;
+	}  
+
+	if (LOG_ON_PTP_E (ptp_setdevicepropvalue (params, PTP_DPC_NIKON_LiveViewAFArea, &int_val, PTP_DTC_UINT16)) == PTP_RC_OK) {
+		return GP_OK;
+	}
+
+	return (GP_ERROR);
+}
+
 static struct deviceproptableu8 canon_quality[] = {
 	{ N_("undefined"),	0x00, 0 },
 	{ N_("economy"),	0x01, 0 },
@@ -11664,6 +11756,7 @@ static struct submenu nikon_z9_capture_settings[] = {
 	{ N_("Minimum Shutter Speed"),  	"minimumshutterspeed",  PTP_DPC_NIKON_PADVPMode,	PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon_Z6_PADVPValue,		_put_Nikon_Z6_PADVPValue },
   { N_("Auto ISO"),               "autoiso2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_AutoIso,         _put_Nikon_Z9_AutoIso },
   { N_("Long exposure noise reduction"),               "longexpnr2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_Longexpnr,         _put_Nikon_Z9_Longexpnr },
+  { N_("Still capture focus metering mode"),               "focusmetermode2",              0,                  PTP_VENDOR_NIKON,   0,  _get_Nikon_Z9_FocusMetering,         _put_Nikon_Z9_FocusMetering },
   { 0,0,0,0,0,0,0 },
 };
 
