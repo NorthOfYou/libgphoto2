@@ -1765,6 +1765,9 @@ static struct {
 
 	/* Stefan Weiberg at SUSE */
 	{"Nikon:Z9",			  0x04b0, 0x0450, PTP_CAP|PTP_CAP_PREVIEW},
+	
+	/* Ben Govero */
+	{"Nikon:Z8",			  0x04b0, 0x0451, PTP_CAP|PTP_CAP_PREVIEW},
 
 	/* http://sourceforge.net/tracker/?func=detail&aid=3536904&group_id=8874&atid=108874 */
 	/* https://github.com/gphoto/libgphoto2/issues/569 */

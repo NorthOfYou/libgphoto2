@@ -9156,7 +9156,7 @@ _put_Nikon_ViewFinder(CONFIG_PUT_ARGS) {
 			// when in the Arsenal code we just have to set it back to Card
 			// The recordingmedia setting isn't present on the Z9 as of the 3.10
 			// firmware so we're only fixing for that camera at the moment
-			if (strcmp(params->deviceinfo.Model,"Nikon:Z9")) {
+			if (strcmp(params->deviceinfo.Model,"Nikon:Z9") || strcmp(params->deviceinfo.Model,"Nikon:Z8")) {
 				value.u8 = 0;
 			} else {
 				value.u8 = 1;
@@ -11924,6 +11924,7 @@ static struct menu menus[] = {
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0448, nikon_z6_capture_settings,      NULL,   NULL }, /* Z5 guessed */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x044b, nikon_z6_capture_settings,      NULL,   NULL }, /* Z7_2 guessed */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0450, nikon_z9_capture_settings,      NULL,   NULL }, /* Z9 */
+	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x0451, nikon_z9_capture_settings,      NULL,   NULL }, /* Z8 */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0x044c, nikon_z6_capture_settings,      NULL,   NULL }, /* Z6_2 guessed */
 	{ N_("Capture Settings"),           "capturesettings",  0x4b0,  0,      nikon_generic_capture_settings, NULL,   NULL },
 	{ N_("Capture Settings"),           "capturesettings",  0,      0,      capture_settings_menu,          NULL,   NULL },
