@@ -6971,6 +6971,9 @@ static struct deviceproptableu16 canon_aperture[] = {
 	{ N_("auto"),	0xffff, 0 },
 	{ N_("auto"),	0x00b0, 0 }, /* eos R Intelligent Auto */
 	{ N_("auto"),	0x00ff, 0 }, /* eos R FV mode */
+	{ N_("auto"),	0x0d00, 0 }, /* aperture on eos R6ii TV mode */
+	{ N_("auto"),	0x0600, 0 }, /* aperture on eos R6ii TV mode */
+	{ N_("auto"),	0x0f00, 0 }, /* Auto on eos R6ii TV mode */
 	{ N_("1.8"),	0x000e, 0 }, /* eos R AV mode, push below min aperture THIS IS AN EOS R* bug */
 	{ N_("4"),	0x0021, 0 },   /* eos R AV mode, push below min aperture on 24-105 lens THIS IS AN EOS R* bug */
 	{ "1",		0x0008, 0 },
