@@ -1337,6 +1337,8 @@ static struct {
 	/* Elijah Parker, mail@timelapseplus.com */
 	{"Sony:DSC-A7S III (Control)",		0x054c, 0x0d18, PTP_CAP|PTP_CAP_PREVIEW},
 
+	{"Sony:ZV-E1",		0x054c, 0x0e74, PTP_CAP|PTP_CAP_PREVIEW},
+
 	{"Sony:ILCE-1 (Control)",		0x054c, 0x0d1c, PTP_CAP|PTP_CAP_PREVIEW},
 
   /* The A7-RV */
