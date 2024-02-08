@@ -1338,6 +1338,7 @@ static struct {
 	{"Sony:DSC-A7S III (Control)",		0x054c, 0x0d18, PTP_CAP|PTP_CAP_PREVIEW},
 
 	{"Sony:ZV-E1",		0x054c, 0x0e74, PTP_CAP|PTP_CAP_PREVIEW},
+	// {"Sony:ZV-E1 (MTP)",		0x054c, 0x0e73, 0},
 
 	{"Sony:ILCE-1 (Control)",		0x054c, 0x0d1c, PTP_CAP|PTP_CAP_PREVIEW},
 
@@ -2484,6 +2485,8 @@ static struct {
 	{"Canon:EOS R7",			0x04a9, 0x32f7, PTP_CAP|PTP_CAP_PREVIEW},
 
 	{"Canon:EOS R8", 0x04a9, 0x330c, PTP_CAP|PTP_CAP_PREVIEW},
+
+	{"Canon:EOS R10", 0x04a9, 0x32f8, PTP_CAP|PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/642 */
 	{"Canon:EOS M50m2",			0x04a9, 0x32f9, PTP_CAP|PTP_CAP_PREVIEW},
 
