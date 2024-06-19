@@ -1333,6 +1333,11 @@ static struct {
 	/* Ingvar Stepanyan <rreverser@google.com> */
 	{"Sony:Alpha-A6600 (MTP)",	0x054c, 0x0d0f, 0},
 	{"Sony:Alpha-A6600 (PC Control)",	0x054c, 0x0d10, PTP_CAP|PTP_CAP_PREVIEW},
+	
+	{"Sony:Alpha-A6700 (PC Control)",	0x054c, 0x0e78, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Sony:Alpha-A6700 (MTP)",	0x054c, 0x0e77, 0},
+	// {"Sony:Alpha-A6700 (MSC)",	0x054c, 0x0e76, 0},
+	{"Sony:Alpha-A6700 (Webcam)",	0x054c, 0x0ea6, 0},
 
 	/* Elijah Parker, mail@timelapseplus.com */
 	{"Sony:DSC-A7S III (Control)",		0x054c, 0x0d18, PTP_CAP|PTP_CAP_PREVIEW},
@@ -2477,6 +2482,7 @@ static struct {
 	{"Canon:EOS M200",			0x04a9, 0x32ef, PTP_CAP|PTP_CAP_PREVIEW},
 	/* from timelapse-view */
 	{"Canon:EOS R5",			0x04a9, 0x32f4, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Canon:EOS R5C",			0x04a9, 0x3303, PTP_CAP|PTP_CAP_PREVIEW},
 	/* Steve Rencontre <steve@rsn-tech.co.uk> */
 	{"Canon:EOS R6",			0x04a9, 0x32f5, PTP_CAP|PTP_CAP_PREVIEW},
 	/* Ben Govero <ben@witharsenal.com> */
@@ -2634,6 +2640,7 @@ static struct {
 	{"Fuji:Fujifilm X100V",			0x04cb, 0x02e5, PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/505 */
 	{"Fuji:Fujifilm X-T4",			0x04cb, 0x02e6, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Fuji:Fujifilm X-T5",			0x04cb, 0x02fc, PTP_CAP|PTP_CAP_PREVIEW},
 	/* via timelapse-view */
 	{"Fuji:Fujifilm GFX 100S",		0x04cb, 0x02ea, PTP_CAP|PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/603 */
