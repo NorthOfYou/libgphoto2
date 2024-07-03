@@ -1771,6 +1771,8 @@ static struct {
 	/* Thomas Schaad <tom@avisec.ch> */
 	{"Nikon:Z6_2",                	  0x04b0, 0x044c, PTP_CAP|PTP_CAP_PREVIEW},
 
+	{"Nikon:Z6_3",                	  0x04b0, 0x0454, PTP_CAP|PTP_CAP_PREVIEW},
+
 	/* Stefan Weiberg at SUSE */
 	{"Nikon:Z9",			  0x04b0, 0x0450, PTP_CAP|PTP_CAP_PREVIEW},
 	
