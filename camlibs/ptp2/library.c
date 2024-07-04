@@ -3795,6 +3795,11 @@ enable_liveview:
 				continue;
 			}
 
+			// Was crashing with PTP_ERROR_NODEVICE when powered off
+			if (ret != PTP_RC_OK) {
+				C_PTP (ret);
+			}
+
 			ptp_free_objectinfo(&oi);
 
 			ret = ptp_getobject_with_size(params, preview_object, &ximage, &size);
