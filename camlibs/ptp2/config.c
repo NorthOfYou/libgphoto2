@@ -2748,6 +2748,15 @@ static struct deviceproptableu8 sony_size[] = {
 };
 GENERIC8TABLE(Sony_ImageSize,sony_size)
 
+static struct deviceproptableu8 sony_raw_quality[] = {
+	{ N_("Uncompressed"),		    0x05, 0 },
+	{ N_("Lossless Comp (L)"),	0x02, 0 },
+	{ N_("Lossless Comp (M)"),	0x03, 0 },
+	{ N_("Lossless Comp (S)"),	0x04, 0 },
+	{ N_("Compressed"),		      0x01, 0 },
+};
+GENERIC8TABLE(Sony_RawImageQuality,sony_raw_quality)
+
 static struct deviceproptableu8 nikon1_size[] = {
 	{ N_("Small"),		0x00, 0 },
 	{ N_("Medium"),		0x01, 0 },
@@ -11441,6 +11450,7 @@ static struct submenu image_settings_menu[] = {
 	{ N_("Raw Image Size"),         "rawimagesize",         PTP_DPC_NIKON_RawImageSize,             PTP_VENDOR_NIKON,   PTP_DTC_STR,    _get_STR_ENUMList,              _put_STR },
 	{ N_("Image Size"),             "imagesize",            PTP_DPC_NIKON_1_ImageSize,              PTP_VENDOR_NIKON,   PTP_DTC_UINT8,  _get_Nikon1_ImageSize,          _put_Nikon1_ImageSize },
 	{ N_("Image Size"),             "imagesize",            PTP_DPC_SONY_ImageSize,                 PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_ImageSize,            _put_Sony_ImageSize },
+	{ N_("Sony Raw Image Quality / Size"), "rawimagequality",      PTP_DPC_SONY_RawImageQuality,    PTP_VENDOR_SONY,    PTP_DTC_UINT8,  _get_Sony_RawImageQuality,            _put_Sony_RawImageQuality },
 	{ N_("Image Size"),             "imagesize",            PTP_DPC_CANON_ImageSize,                PTP_VENDOR_CANON,   PTP_DTC_UINT8,  _get_Canon_Size,                _put_Canon_Size },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_CANON_ISOSpeed,                 PTP_VENDOR_CANON,   PTP_DTC_UINT16, _get_Canon_ISO,                 _put_Canon_ISO },
 	{ N_("ISO Speed"),              "iso",                  PTP_DPC_ExposureIndex,                  PTP_VENDOR_FUJI,    PTP_DTC_INT32,  _get_INT,                       _put_INT },
