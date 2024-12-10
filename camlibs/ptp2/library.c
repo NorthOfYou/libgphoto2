@@ -2494,6 +2494,10 @@ static struct {
 
 	{"Canon:EOS R8", 0x04a9, 0x330c, PTP_CAP|PTP_CAP_PREVIEW},
 
+	{"Canon:EOS R50",			0x04a9, 0x330d, PTP_CAP|PTP_CAP_PREVIEW},
+	/* https://github.com/gphoto/libgphoto2/issues/924 */
+	{"Canon:EOS R100",			0x04a9, 0x3312, PTP_CAP|PTP_CAP_PREVIEW},
+
 	{"Canon:EOS R10", 0x04a9, 0x32f8, PTP_CAP|PTP_CAP_PREVIEW},
 	/* https://github.com/gphoto/libgphoto2/issues/642 */
 	{"Canon:EOS M50m2",			0x04a9, 0x32f9, PTP_CAP|PTP_CAP_PREVIEW},
