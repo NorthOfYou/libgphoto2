@@ -2485,6 +2485,7 @@ static struct {
 	/* from timelapse-view */
 	{"Canon:EOS R5",			0x04a9, 0x32f4, PTP_CAP|PTP_CAP_PREVIEW},
 	{"Canon:EOS R5C",			0x04a9, 0x3303, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Canon:EOS 5Rm2",			0x04a9, 0x3314, PTP_CAP|PTP_CAP_PREVIEW},
 	/* Steve Rencontre <steve@rsn-tech.co.uk> */
 	{"Canon:EOS R6",			0x04a9, 0x32f5, PTP_CAP|PTP_CAP_PREVIEW},
 	/* Ben Govero <ben@witharsenal.com> */
