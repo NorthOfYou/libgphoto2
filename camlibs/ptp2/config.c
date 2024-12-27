@@ -5914,6 +5914,19 @@ _get_Sony_ShutterSpeed(CONFIG_GET_ARGS) {
 	if (have_prop (camera, PTP_VENDOR_SONY, PTP_DPC_SONY_ShutterSpeed2))
 		C_PTP_REP (ptp_generic_getdevicepropdesc (params, PTP_DPC_SONY_ShutterSpeed2, dpd));
 
+
+	if (dpd->CurrentValue.u32 == 0) {
+		// On the A1 ii, if value is 0, try to get it from PTP_DPC_SONY_ShutterSpeed (maybe a bug on Sony's side)
+		if (params->deviceinfo.Model && !strcmp(params->deviceinfo.Model, "ILCE-1M2")) {
+			PTPDevicePropDesc dpd2;
+			C_PTP_REP(ptp_generic_getdevicepropdesc(params, PTP_DPC_SONY_ShutterSpeed, &dpd2));
+			if (dpd2.CurrentValue.u32 != 0) {
+				dpd->CurrentValue.u32 = dpd2.CurrentValue.u32;
+			}
+		}
+	}
+	
+
 	gp_widget_new (GP_WIDGET_RADIO, _(menu->label), widget);
 	gp_widget_set_name (*widget, menu->name);
 

@@ -1347,6 +1347,8 @@ static struct {
 
 	{"Sony:ILCE-1 (Control)",		0x054c, 0x0d1c, PTP_CAP|PTP_CAP_PREVIEW},
 
+	{"Sony:ILCE-1M2",	        	0x054c, 0x0eed, PTP_CAP|PTP_CAP_PREVIEW},
+
   /* The A7-RV */
   {"Sony:ILCE-7RM5 (Control)",		0x054c, 0x0e0c, PTP_CAP|PTP_CAP_PREVIEW},
 

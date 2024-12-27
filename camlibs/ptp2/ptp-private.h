@@ -150,6 +150,7 @@ has_sony_mode_300(PTPParams *params) {
 	if (!strcmp(params->deviceinfo.Model, "ILCE-7RM4A")) return 1;
 	if (!strcmp(params->deviceinfo.Model, "ILCE-7C")) return 1;
 	if (!strcmp(params->deviceinfo.Model, "ILCE-9M2")) return 1;
+	if (!strcmp(params->deviceinfo.Model, "ILCE-1M2")) return 1;
 	if (!strcmp(params->deviceinfo.Model, "ILCE-1")) return 1;
 	if (!strcmp(params->deviceinfo.Model, "ILCE-7M4")) return 1;
 	if (!strcmp(params->deviceinfo.Model, "ILCE-7RM5")) return 1;
