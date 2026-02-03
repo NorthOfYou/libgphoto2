@@ -2012,7 +2012,7 @@ static struct {
 	{"Canon:EOS Digital Rebel XTi (PTP mode)", 0x04a9, 0x3110, PTP_CAP},
 	{"Canon:EOS Kiss Digital X (PTP mode)", 0x04a9, 0x3110, PTP_CAP},
 	/* https://sourceforge.net/tracker/?func=detail&atid=358874&aid=1456391&group_id=8874 */
-	{"Canon:EOS 30D (PTP mode)",            0x04a9, 0x3113, PTP_CAP},
+	
 	{"Canon:Digital IXUS 900Ti (PTP mode)", 0x04a9, 0x3115, 0},
 	{"Canon:PowerShot SD900 (PTP mode)",    0x04a9, 0x3115, 0},
 	{"Canon:Digital IXUS 750 (PTP mode)",   0x04a9, 0x3116, PTPBUG_DELETE_SENDS_EVENT},
@@ -2499,7 +2499,9 @@ static struct {
 
 	{"Canon:EOS R8", 0x04a9, 0x330c, PTP_CAP|PTP_CAP_PREVIEW},
 
-	{"Canon:EOS R50",			0x04a9, 0x330d, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Canon:EOS R50",			 0x04a9, 0x330d, PTP_CAP|PTP_CAP_PREVIEW},
+	{"Canon:EOS R50 (MTP mode)", 0x04a9, 0x3113, PTP_CAP},
+	
 	/* https://github.com/gphoto/libgphoto2/issues/924 */
 	{"Canon:EOS R100",			0x04a9, 0x3312, PTP_CAP|PTP_CAP_PREVIEW},
 
