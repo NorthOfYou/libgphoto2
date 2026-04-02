@@ -1769,6 +1769,9 @@ static struct {
 	/* Thomas Schaad */
 	{"Nikon:Z5",                      0x04b0, 0x0448, PTP_CAP|PTP_CAP_PREVIEW},
 
+	/* Nikon Z5 II, USB PID 0x0456, iProduct "NIKON DSC Z5_2" */
+	{"Nikon:Z5_2",                    0x04b0, 0x0456, PTP_CAP|PTP_CAP_PREVIEW},
+
 	/* Fahrion <fahrion.2600@gmail.com> */
 	{"Nikon:Z7_2",                	  0x04b0, 0x044b, PTP_CAP|PTP_CAP_PREVIEW},
 
