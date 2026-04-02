@@ -1355,6 +1355,7 @@ static struct {
 	/* via email */
 	{"Sony:ILCE-7C (Control)",		0x054c, 0x0d2b, PTP_CAP|PTP_CAP_PREVIEW},
   {"Sony:ILCE-7M4 (Control)",		0x054c, 0x0da7, PTP_CAP|PTP_CAP_PREVIEW},
+  {"Sony:ILCE-7M5 (Control)",		0x054c, 0x0f56, PTP_CAP|PTP_CAP_PREVIEW},
 	{"Sony:ZV-E10 (Control)",		0x054c, 0x0d97, PTP_CAP|PTP_CAP_PREVIEW},
 
 	/* Thomas Schaad, napstertom@gmail.com */

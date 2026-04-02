@@ -5916,8 +5916,10 @@ _get_Sony_ShutterSpeed(CONFIG_GET_ARGS) {
 
 
 	if (dpd->CurrentValue.u32 == 0) {
-		// On the A1 ii, if value is 0, try to get it from PTP_DPC_SONY_ShutterSpeed (maybe a bug on Sony's side)
-		if (params->deviceinfo.Model && !strcmp(params->deviceinfo.Model, "ILCE-1M2")) {
+		// On the A1 ii and A7V, if value is 0, try to get it from PTP_DPC_SONY_ShutterSpeed (maybe a bug on Sony's side)
+		if (params->deviceinfo.Model &&
+		    (!strcmp(params->deviceinfo.Model, "ILCE-1M2") ||
+		     !strcmp(params->deviceinfo.Model, "ILCE-7M5"))) {
 			PTPDevicePropDesc dpd2;
 			C_PTP_REP(ptp_generic_getdevicepropdesc(params, PTP_DPC_SONY_ShutterSpeed, &dpd2));
 			if (dpd2.CurrentValue.u32 != 0) {
