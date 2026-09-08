@@ -1962,6 +1962,99 @@ ptp_pack_EOS_1DX_ImageFormat (PTPParams* params, unsigned char* data, uint16_t v
   return s;
 }
 
+/*
+  R5 Mark II variant of ptp_unpack_EOS_ImageFormat / ptp_pack_EOS_ImageFormat.
+
+  The R5m2 (like the 1DX) reports compression == 0 ("user": JPEG quality is a
+  separate menu item) and offers a Large JPEG as the second entry of a RAW+JPEG
+  pair. In the shared encoding a second entry of (type=JPEG, size=L,
+  compression=user) becomes s2=0,c2=0 -- identical to "no second entry" -- so
+  "RAW" and "RAW + Large JPEG" collapsed onto 0x0c00 and the latter could never
+  be selected. Here "no second entry" is encoded as the sentinel 0xFF in the low
+  byte instead. The sentinel is unreachable from real wire data (it would need
+  JPEG size 0x10 with compression 15).
+
+  NOTE: upstream libgphoto2 (1874ee28c) guards its sentinel with
+  `if (s2 == 0 && c2 == 0)`, which also rewrites the *real* RAW+L second entry
+  and therefore still collides. The guard must be on the entry count n.
+  Only used when is_canon_r5m2() (ptp-private.h); other bodies are untouched.
+*/
+static inline uint16_t
+ptp_unpack_EOS_R5M2_ImageFormat (PTPParams* params, unsigned char** data )
+{
+	const unsigned char* d = *data;
+	uint32_t n = dtoh32a( d );
+	uint32_t l, t1, s1, c1, t2 = 0, s2 = 0, c2 = 0;
+
+	if (n != 1 && n != 2) {
+		ptp_debug (params, "parsing EOS R5m2 ImageFormat property failed (n != 1 && n != 2: %d)", n);
+		return 0;
+	}
+	l = dtoh32a( d+=4 );
+	if (l != 0x10) {
+		ptp_debug (params, "parsing EOS R5m2 ImageFormat property failed (l != 0x10: 0x%x)", l);
+		return 0;
+	}
+	t1 = dtoh32a( d+=4 );
+	s1 = dtoh32a( d+=4 );
+	c1 = dtoh32a( d+=4 );
+
+	if (n == 2) {
+		l = dtoh32a( d+=4 );
+		if (l != 0x10) {
+			ptp_debug (params, "parsing EOS R5m2 ImageFormat property failed (l != 0x10: 0x%x)", l);
+			return 0;
+		}
+		t2 = dtoh32a( d+=4 );
+		s2 = dtoh32a( d+=4 );
+		c2 = dtoh32a( d+=4 );
+	}
+
+	*data = (unsigned char*) d+4;
+
+	/* deal with S1/S2/S3 JPEG sizes (wire 0xe/0xf/0x10 -> nibbles 0xd/0xe/0xf) */
+	if( s1 >= 0xe ) s1--;
+	if( s2 >= 0xe ) s2--;
+
+	/* encode RAW flag */
+	c1 |= (t1 == 6) ? 8 : 0;
+	c2 |= (t2 == 6) ? 8 : 0;
+
+	/* sentinel: no second entry at all */
+	if (n == 1)
+		s2 = c2 = 0xF;
+
+	return ((s1 & 0xF) << 12) | ((c1 & 0xF) << 8) | ((s2 & 0xF) << 4) | ((c2 & 0xF) << 0);
+}
+
+static inline uint32_t
+ptp_pack_EOS_R5M2_ImageFormat (PTPParams* params, unsigned char* data, uint16_t value)
+{
+	uint32_t n = ((value & 0xFF) == 0xFF) ? 1 : 2;   /* the only difference vs. the shared packer */
+	uint32_t s = 4 + 0x10 * n;
+
+	if( !data )
+		return s;
+
+#define PACK_R5M2_SMALL_JPEG_SIZE( X ) (X) >= 0xd ? (X)+1 : (X)
+
+	htod32a(data+=0, n);
+	htod32a(data+=4, 0x10);
+	htod32a(data+=4, (((value >> 8) & 0xF) >> 3) ? 6 : 1);
+	htod32a(data+=4, PACK_R5M2_SMALL_JPEG_SIZE((value >> 12) & 0xF));
+	htod32a(data+=4, ((value >> 8) & 0xF) & ~8);
+
+	if (n == 2) {
+		htod32a(data+=4, 0x10);
+		htod32a(data+=4, (((value >> 0) & 0xF) >> 3) ? 6 : 1);
+		htod32a(data+=4, PACK_R5M2_SMALL_JPEG_SIZE((value >> 4) & 0xF));
+		htod32a(data+=4, ((value >> 0) & 0xF) & ~8);
+	}
+
+#undef PACK_R5M2_SMALL_JPEG_SIZE
+	return s;
+}
+
 
 /* 00: 32 bit size
  * 04: 16 bit subsize
@@ -2145,6 +2238,17 @@ ptp_pack_EOS_CustomFuncEx (PTPParams* params, unsigned char* data, char* str)
 #define PTP_ece2_OA_2ndOID	0x28
 #define PTP_ece2_OA_Name	0x2c	/* OK */
 
+/* ObjectAddedEx64LFN (0xc1b6), captured from an EOS R5 Mark II: identical to ece2 through
+ * the 2nd OID, then a 32-bit timestamp at 0x2c and the filename as a PTP unicode string
+ * (count byte + UTF-16LE) at 0x30. ObjectSize is 64-bit at 0x1c (low 32 bits used, as ece2). */
+#define PTP_ece3_OA_ObjectID	8
+#define PTP_ece3_OA_StorageID	0x0c
+#define PTP_ece3_OA_OFC		0x10
+#define PTP_ece3_OA_Size	0x1c
+#define PTP_ece3_OA_Parent	0x24
+#define PTP_ece3_OA_2ndOID	0x28
+#define PTP_ece3_OA_Name	0x30
+
 /* for PTP_EC_CANON_EOS_ObjectAddedNew */
 #define PTP_ece_OAN_OFC		0x0c
 #define PTP_ece_OAN_Size	0x14
@@ -2285,6 +2389,30 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 			ce[i].u.object.oi.Filename 	= strdup(((char*)&curdata[PTP_ece2_OA_Name]));
 			ptp_debug (params, "event %d: objectinfo added oid %08lx, parent %08lx, ofc %04x, size %d, filename %s", i, ce[i].u.object.oid, ce[i].u.object.oi.ParentObject, ce[i].u.object.oi.ObjectFormat, ce[i].u.object.oi.ObjectCompressedSize, ce[i].u.object.oi.Filename);
 			break;
+		case PTP_EC_CANON_EOS_ObjectAddedEx64LFN: {
+			uint8_t	namelen = 0;
+			char	*name = NULL;
+
+			if (size < PTP_ece3_OA_Name+1) {
+				ptp_debug (params, "size %d is smaller than %d", size, PTP_ece3_OA_Name+1);
+				break;
+			}
+			/* bounded by this record's size; on failure leave the entry UNKNOWN, exactly as before */
+			ptp_unpack_string (params, curdata, PTP_ece3_OA_Name, size, &namelen, &name);
+			if (!name) {
+				ptp_debug (params, "event %d: ObjectAddedEx64LFN without a decodable filename, ignoring", i);
+				break;
+			}
+			ce[i].type = PTP_CANON_EOS_CHANGES_TYPE_OBJECTINFO;
+			ce[i].u.object.oid    		= dtoh32a(&curdata[PTP_ece3_OA_ObjectID]);
+			ce[i].u.object.oi.StorageID	= dtoh32a(&curdata[PTP_ece3_OA_StorageID]);
+			ce[i].u.object.oi.ParentObject	= dtoh32a(&curdata[PTP_ece3_OA_Parent]);
+			ce[i].u.object.oi.ObjectFormat 	= dtoh16a(&curdata[PTP_ece3_OA_OFC]);
+			ce[i].u.object.oi.ObjectCompressedSize= dtoh32a(&curdata[PTP_ece3_OA_Size]);	/* low 32 bits of a 64-bit size */
+			ce[i].u.object.oi.Filename 	= name;
+			ptp_debug (params, "event %d: objectinfo added (64lfn) oid %08lx, parent %08lx, ofc %04x, size %d, filename %s", i, ce[i].u.object.oid, ce[i].u.object.oi.ParentObject, ce[i].u.object.oi.ObjectFormat, ce[i].u.object.oi.ObjectCompressedSize, ce[i].u.object.oi.Filename);
+			break;
+		}
 		case PTP_EC_CANON_EOS_RequestObjectTransfer:
 		case PTP_EC_CANON_EOS_RequestObjectTransfer64:
 			if (size < PTP_ece_OI_Name+1) {
@@ -2353,7 +2481,13 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
         // printf("CAMERA NAME: %s\n", params->deviceinfo.Model);
 
         /* special handling of ImageFormat properties */
-          if (is_canon_1dx_series(params)) {
+          if (is_canon_r5m2(params)) {
+            for (j=0;j<propxcnt;j++) {
+              dpd->FORM.Enum.SupportedValue[j].u16 =
+                ptp_unpack_EOS_R5M2_ImageFormat( params, &xdata );
+              ptp_debug (params, "event %d: suppval[%d] of %x is 0x%x (r5m2).", i, j, proptype, dpd->FORM.Enum.SupportedValue[j].u16);
+            }
+          } else if (is_canon_1dx_series(params)) {
             for (j=0;j<propxcnt;j++) {
               dpd->FORM.Enum.SupportedValue[j].u16 =
                 ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
@@ -2678,7 +2812,9 @@ ptp_unpack_CANON_changes (PTPParams *params, unsigned char* data, unsigned int d
 				case PTP_DPC_CANON_EOS_ImageFormatSD:
 				case PTP_DPC_CANON_EOS_ImageFormatExtHD:
 					dpd->DataType = PTP_DTC_UINT16;
-          if (is_canon_1dx_series(params)) {
+          if (is_canon_r5m2(params)) {
+            dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_R5M2_ImageFormat( params, &xdata );
+          } else if (is_canon_1dx_series(params)) {
             dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_1DX_ImageFormat( params, &xdata );
           } else {
             dpd->FactoryDefaultValue.u16	= ptp_unpack_EOS_ImageFormat( params, &xdata );

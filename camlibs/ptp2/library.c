@@ -3139,7 +3139,19 @@ camera_exit (Camera *camera, GPContext *context)
 				if (params->inliveview && ptp_operation_issupported(params, PTP_OC_CANON_EOS_TerminateViewfinder))
 					if ((exit_result = ptp_canon_eos_end_viewfinder (params)) != PTP_RC_OK)
 						goto exitfailed;
-				if ((exit_result = camera_unprepare_capture (camera, context)) != PTP_RC_OK)
+				if (is_canon_r5m2 (params)) {
+					/* camera_unprepare_capture returns gphoto result codes, not PTP return codes.
+					 * The legacy compare below (== PTP_RC_OK) therefore always fails, which skips
+					 * ptp_closesession and makes gp_camera_exit return GP_ERROR. The R5 Mark II
+					 * keeps its rear LCD off while it believes a session is still open, so for
+					 * this body evaluate the result correctly (as upstream does with
+					 * exit_gp_result). Other bodies deliberately keep the legacy behaviour. */
+					int exit_gp_result = camera_unprepare_capture (camera, context);
+					if (exit_gp_result < GP_OK) {
+						exit_result = PTP_RC_GeneralError;
+						goto exitfailed;
+					}
+				} else if ((exit_result = camera_unprepare_capture (camera, context)) != PTP_RC_OK)
 					goto exitfailed;
 			}
 			break;

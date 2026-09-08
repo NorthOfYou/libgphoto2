@@ -171,6 +171,21 @@ is_canon_1dx_series(PTPParams *params) {
 	return 0;
 }
 
+// The R5 Mark II reports imageformat entries whose JPEG compression field is 0
+// ("user": JPEG quality is a separate menu item), so a "Large JPEG" second entry of a
+// RAW+JPEG pair is indistinguishable from "no second entry" in the shared nibble
+// encoding (RAW and RAW + Large JPEG both became 0x0c00). Gated bodies use a
+// dedicated pack/unpack pair with a 0xFF "single entry" sentinel and their own
+// name table. Everything else keeps the shared code path, byte for byte.
+static inline int
+is_canon_r5m2(PTPParams *params) {
+	if (params->deviceinfo.VendorExtensionID != PTP_VENDOR_CANON) return 0;
+	if (!params->deviceinfo.Model) return 0;
+	if (!strcmp(params->deviceinfo.Model, "Canon EOS R5m2")) return 1;
+	if (!strcmp(params->deviceinfo.Model, "Canon EOS 5Rm2")) return 1;
+	return 0;
+}
+
 static inline int
 have_sigma_prop(PTPParams *params, uint16_t vendor, uint16_t prop) {
 	/* The special Canon EOS property set gets special treatment. */

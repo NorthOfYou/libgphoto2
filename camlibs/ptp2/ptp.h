@@ -1239,6 +1239,11 @@ typedef struct _PTPIPHeader PTPIPHeader;
 #define PTP_EC_CANON_EOS_OLCInfoChanged			0xc1a5
 #define PTP_EC_CANON_EOS_ObjectAddedEx64		0xc1a7
 #define PTP_EC_CANON_EOS_ObjectInfoChangedEx64		0xc1a8
+/* Seen on EOS R5 Mark II (fw 1.1.1) for files written to the memory card. Layout like
+ * ObjectAddedEx64 through offset 0x28, then a timestamp and a PTP unicode filename at 0x30. */
+#define PTP_EC_CANON_EOS_ObjectAddedEx64LFN		0xc1b6
+#define PTP_EC_CANON_EOS_ObjectInfoChangedEx64LFN	0xc1b7
+#define PTP_EC_CANON_EOS_RequestObjectTransfer64LFN	0xc1b8
 #define PTP_EC_CANON_EOS_RequestObjectTransfer64	0xc1a9
 #define PTP_EC_CANON_EOS_RequestObjectTransferDT64	0xc1aa
 #define PTP_EC_CANON_EOS_RequestObjectTransferFTP64	0xc1ab

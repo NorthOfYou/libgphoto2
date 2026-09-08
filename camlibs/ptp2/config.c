@@ -3035,7 +3035,45 @@ static struct deviceproptableu16 canon_eos_image_format[] = {
   { N_("Medium 2 + sRAW"),		0x2c61, 0 },
   { N_("Small + sRAW"),		0x2c21, 0 },
 };
-GENERIC16TABLE(Canon_EOS_ImageFormat,canon_eos_image_format)
+GENERIC16TABLE(Canon_EOS_ImageFormatTbl,canon_eos_image_format)
+
+/* Canon EOS R5 Mark II only (see ptp-private.h:is_canon_r5m2 and
+   ptp-pack.c:ptp_unpack_EOS_R5M2_ImageFormat). Values carry the 0xFF "no second
+   entry" sentinel, so RAW / cRAW no longer collide with RAW + Large JPEG /
+   cRAW + Large JPEG. JPEG quality is a separate menu item on this body, hence
+   no Fine/Normal in the names. Sizes verified from calibration: S1 = 4176x2784. */
+static struct deviceproptableu16 canon_eos_r5m2_image_format[] = {
+	{ N_("Large JPEG"),			0x00ff, 0 },
+	{ N_("Medium JPEG"),			0x10ff, 0 },
+	{ N_("Small 1 JPEG"),			0xd0ff, 0 },
+	{ N_("Small 2 JPEG"),			0xe0ff, 0 },
+	{ N_("cRAW"),				0x0bff, 0 },
+	{ N_("RAW"),				0x0cff, 0 },
+	{ N_("RAW + Large JPEG"),		0x0c00, 0 },
+	{ N_("cRAW + Large JPEG"),		0x0b00, 0 },
+	{ N_("RAW + Medium JPEG"),		0x0c10, 0 },
+	{ N_("cRAW + Medium JPEG"),		0x0b10, 0 },
+	{ N_("RAW + Small 1 JPEG"),		0x0cd0, 0 },
+	{ N_("cRAW + Small 1 JPEG"),		0x0bd0, 0 },
+	{ N_("RAW + Small 2 JPEG"),		0x0ce0, 0 },
+	{ N_("cRAW + Small 2 JPEG"),		0x0be0, 0 },
+};
+GENERIC16TABLE(Canon_EOS_R5M2_ImageFormatTbl,canon_eos_r5m2_image_format)
+
+/* Dispatch: the R5 Mark II gets its own table; every other body keeps the shared one. */
+static int
+_get_Canon_EOS_ImageFormat(CONFIG_GET_ARGS) {
+	if (is_canon_r5m2(&camera->pl->params))
+		return _get_Canon_EOS_R5M2_ImageFormatTbl(CONFIG_GET_NAMES);
+	return _get_Canon_EOS_ImageFormatTbl(CONFIG_GET_NAMES);
+}
+
+static int
+_put_Canon_EOS_ImageFormat(CONFIG_PUT_ARGS) {
+	if (is_canon_r5m2(&camera->pl->params))
+		return _put_Canon_EOS_R5M2_ImageFormatTbl(CONFIG_PUT_NAMES);
+	return _put_Canon_EOS_ImageFormatTbl(CONFIG_PUT_NAMES);
+}
 
 static struct deviceproptableu16 canon_eos_aeb[] = {
 	{ N_("off"),		0x0000, 0 },
